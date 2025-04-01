@@ -1,0 +1,182 @@
+/* Import base styles */
+@import 'styles.css';
+
+/* Login specific styles */
+.login-card {
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 15px -3px rgba(96, 165, 250, 0.1),
+                0 4px 6px -2px rgba(96, 165, 250, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(96, 165, 250, 0.1);
+}
+
+/* Form input styles */
+.form-input {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    border-color: var(--der-volt-teal);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+    outline: none;
+}
+
+/* Custom checkbox styles */
+.custom-checkbox {
+    position: relative;
+    cursor: pointer;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.custom-checkbox input[type="checkbox"]:checked {
+    background-color: var(--der-volt-teal);
+    border-color: var(--der-volt-teal);
+}
+
+.custom-checkbox input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+}
+
+/* Social login buttons */
+.social-login-btn {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-login-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.05);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.social-login-btn:hover::after {
+    transform: translate(-50%, -50%) scale(2);
+}
+
+/* Loading animation for submit button */
+@keyframes loading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: loading 0.6s linear infinite;
+}
+
+/* Error message styles */
+.error-message {
+    color: #e53e3e;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.error-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.error-message::before {
+    content: '⚠';
+    margin-right: 0.5rem;
+}
+
+/* Success message styles */
+.success-message {
+    color: #38a169;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.success-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.success-message::before {
+    content: '✓';
+    margin-right: 0.5rem;
+}
+
+/* Password strength indicator */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    background: #edf2f7;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-weak { background-color: #fc8181; width: 33.33%; }
+.strength-medium { background-color: #f6e05e; width: 66.66%; }
+.strength-strong { background-color: #68d391; width: 100%; }
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .login-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .social-login-btn {
+        padding: 0.75rem 1rem;
+    }
+} 

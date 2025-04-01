@@ -1,0 +1,152 @@
+2025-03-14 00:16:57,080 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:16:57,103 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:16:57,104 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:16:57,104 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:19:44,310 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:19:44,310 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:19:44,359 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:19:45,778 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:19:45,778 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:19:45,778 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:19:45,798 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:19:45,798 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:19:45,798 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:02,141 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\routes.py', reloading
+2025-03-14 00:21:02,228 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\routes.py', reloading
+2025-03-14 00:21:02,310 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\main.py', reloading
+2025-03-14 00:21:03,613 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:03,630 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:03,635 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:03,645 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:03,648 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:03,661 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:07,857 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:21:07,880 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:21:07,946 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\__init__.py', reloading
+2025-03-14 00:21:09,376 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:09,392 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:09,396 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:09,410 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:21:09,550 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:21:09,562 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:22:48,205 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:80
+ * Running on http://192.168.100.230:80
+2025-03-14 00:22:48,209 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-14 00:22:48,218 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 00:22:48,751 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:22:48,760 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:40:47,260 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:80
+ * Running on http://192.168.100.230:80
+2025-03-14 00:40:47,264 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-14 00:40:47,270 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 00:40:48,158 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 00:40:48,236 - werkzeug - INFO -  * Debugger PIN: 185-544-052
+2025-03-14 00:41:01,779 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 00:41:01,844 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:01] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 00:41:02,337 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:02] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 00:41:02,366 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:02] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 00:41:02,523 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:02] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 00:41:12,543 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 00:41:12,583 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:12] "[35m[1mGET /admin/login HTTP/1.1[0m" 500 -
+2025-03-14 00:41:12,677 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:12] "GET /admin/login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 00:41:12,680 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:12] "GET /admin/login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 00:41:17,078 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:17] "GET /admin/login?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 00:41:17,346 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 00:41:17,390 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:17] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 00:41:17,466 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:17] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 00:41:17,469 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:17] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-03-14 00:41:20,523 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 00:41:20,571 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:20] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 00:41:20,663 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:20] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 00:41:20,675 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:20] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-03-14 00:41:20,880 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 00:41:20] "[36mGET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-03-14 01:01:09,037 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:80
+ * Running on http://192.168.100.230:80
+2025-03-14 01:01:09,038 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-03-14 01:01:09,048 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 01:01:09,492 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 01:01:09,513 - werkzeug - INFO -  * Debugger PIN: 365-605-598
+2025-03-14 01:01:25,319 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:01:25,676 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 01:01:25] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 01:01:26,097 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 01:01:26] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 01:01:26,231 - werkzeug - INFO - 192.168.100.230 - - [14/Mar/2025 01:01:26] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-03-14 01:02:05,246 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:02:05,286 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:02:05] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 01:02:05,544 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:02:05] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 01:02:05,548 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:02:05] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 01:02:08,071 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:02:08] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 01:14:12,742 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:14:12,821 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:14:12] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 01:14:13,568 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:14:13] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 01:14:13,579 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:14:13] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 01:14:14,519 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:14:14] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 01:14:18,411 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:14:18] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 01:18:46,140 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\main.py', reloading
+2025-03-14 01:18:46,285 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 01:18:47,158 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 01:18:47,186 - werkzeug - INFO -  * Debugger PIN: 365-605-598
+2025-03-14 01:19:44,880 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\main.py', reloading
+2025-03-14 01:19:44,967 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 01:19:45,606 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 01:19:45,619 - werkzeug - INFO -  * Debugger PIN: 365-605-598
+2025-03-14 01:19:54,544 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:19:54,639 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:19:54] "[35m[1mGET / HTTP/1.1[0m" 500 -
+2025-03-14 01:19:55,273 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:19:55] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-03-14 01:19:55,298 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:19:55] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 01:19:55,752 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:19:55] "[36mGET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-03-14 01:21:06,106 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\main.py', reloading
+2025-03-14 01:21:06,217 - werkzeug - INFO -  * Restarting with stat
+2025-03-14 01:21:07,003 - werkzeug - WARNING -  * Debugger is active!
+2025-03-14 01:21:07,012 - werkzeug - INFO -  * Debugger PIN: 365-605-598
+2025-03-14 01:21:09,121 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:21:09,136 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "GET / HTTP/1.1" 200 -
+2025-03-14 01:21:09,431 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "[33mGET /static/images/der-volt-platform.png HTTP/1.1[0m" 404 -
+2025-03-14 01:21:09,669 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "[33mGET /static/images/der-volt-logo-white.png HTTP/1.1[0m" 404 -
+2025-03-14 01:21:09,854 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "GET /static/images/der-volt-logo.png HTTP/1.1" 200 -
+2025-03-14 01:21:09,895 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "GET /static/script.js HTTP/1.1" 200 -
+2025-03-14 01:21:09,925 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:09] "GET /static/styles.css HTTP/1.1" 200 -
+2025-03-14 01:21:10,057 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:10] "[36mGET /static/dashboard.css HTTP/1.1[0m" 304 -
+2025-03-14 01:21:10,536 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:21:10,538 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:10] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-03-14 01:21:19,643 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:21:19,655 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:19] "GET /signup HTTP/1.1" 200 -
+2025-03-14 01:21:19,909 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:19] "GET /static/signup.css HTTP/1.1" 200 -
+2025-03-14 01:21:19,911 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:19] "GET /static/loading.css HTTP/1.1" 200 -
+2025-03-14 01:21:22,124 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:21:22,211 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:22] "[35m[1mGET /login HTTP/1.1[0m" 500 -
+2025-03-14 01:21:22,457 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:22] "GET /login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 01:21:22,469 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:22] "GET /login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 01:21:22,718 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:21:22] "GET /login?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 01:22:48,248 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:22:48,249 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:48] "GET / HTTP/1.1" 200 -
+2025-03-14 01:22:48,565 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:48] "GET /static/images/der-volt-logo.png HTTP/1.1" 200 -
+2025-03-14 01:22:48,658 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:48] "[33mGET /static/images/der-volt-platform.png HTTP/1.1[0m" 404 -
+2025-03-14 01:22:48,666 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:48] "GET /static/dashboard.css HTTP/1.1" 200 -
+2025-03-14 01:22:48,685 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:48] "GET /static/styles.css HTTP/1.1" 200 -
+2025-03-14 01:22:49,146 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:49] "GET /static/script.js HTTP/1.1" 200 -
+2025-03-14 01:22:49,147 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:49] "[33mGET /static/images/der-volt-logo-white.png HTTP/1.1[0m" 404 -
+2025-03-14 01:22:51,139 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:22:51,143 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:22:51] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-03-14 01:25:56,444 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:25:56,445 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:25:56] "GET / HTTP/1.1" 200 -
+2025-03-14 01:26:20,834 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:26:20,836 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:26:20] "GET /signup HTTP/1.1" 200 -
+2025-03-14 01:26:21,246 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:26:21] "GET /static/loading.css HTTP/1.1" 200 -
+2025-03-14 01:26:21,247 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:26:21] "GET /static/signup.css HTTP/1.1" 200 -
+2025-03-14 01:27:48,686 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:27:48,736 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:27:48] "[35m[1mGET /login HTTP/1.1[0m" 500 -
+2025-03-14 01:27:49,107 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:27:49] "GET /login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-03-14 01:27:49,233 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:27:49] "GET /login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-03-14 01:27:49,895 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:27:49] "GET /login?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-03-14 01:28:03,454 - __main__ - ERROR - Error getting system setting maintenance_mode: no such table: system_settings
+2025-03-14 01:28:03,499 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:28:03] "[35m[1mGET /login HTTP/1.1[0m" 500 -
+2025-03-14 01:28:03,829 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:28:03] "[36mGET /login?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-03-14 01:28:03,922 - werkzeug - INFO - 127.0.0.1 - - [14/Mar/2025 01:28:03] "[36mGET /login?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-03-14 01:42:14,120 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Owen\\Desktop\\2025 money project\\backend\\main.py', reloading
+2025-03-14 01:42:14,210 - werkzeug - INFO -  * Restarting with stat

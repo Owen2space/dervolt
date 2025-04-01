@@ -1,0 +1,156 @@
+/* Import base styles */
+@import 'styles.css';
+
+/* Sign up specific styles */
+.signup-card {
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 15px -3px rgba(96, 165, 250, 0.1),
+                0 4px 6px -2px rgba(96, 165, 250, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.signup-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(96, 165, 250, 0.1);
+}
+
+/* Form input styles */
+.form-input {
+    transition: all 0.2s ease;
+}
+
+.form-input:focus {
+    border-color: var(--der-volt-teal);
+    box-shadow: 0 0 0 3px rgba(0, 178, 178, 0.1);
+    outline: none;
+}
+
+.form-input.error {
+    border-color: #e53e3e;
+}
+
+.form-input.success {
+    border-color: #38a169;
+}
+
+/* Custom checkbox styles */
+.custom-checkbox {
+    position: relative;
+    cursor: pointer;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 2px solid #cbd5e0;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.custom-checkbox input[type="checkbox"]:checked {
+    background-color: var(--der-volt-teal);
+    border-color: var(--der-volt-teal);
+}
+
+.custom-checkbox input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8rem;
+}
+
+/* Password strength indicator */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    background: #edf2f7;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-weak { 
+    background-color: #93C5FD; 
+    width: 33.33%; 
+}
+
+.strength-medium { 
+    background-color: #60A5FA; 
+    width: 66.66%; 
+}
+
+.strength-strong { 
+    background-color: #3B82F6; 
+    width: 100%; 
+}
+
+/* Social login buttons */
+.social-login-btn {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.social-login-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.05);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.social-login-btn:hover::after {
+    transform: translate(-50%, -50%) scale(2);
+}
+
+/* Form validation messages */
+.validation-message {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.error-message {
+    color: #e53e3e;
+}
+
+.success-message {
+    color: #38a169;
+}
+
+.validation-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .signup-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+} 

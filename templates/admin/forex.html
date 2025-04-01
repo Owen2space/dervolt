@@ -1,0 +1,188 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Forex Rates Management{% endblock %}
+
+{% block page_title %}Forex Rates Management{% endblock %}
+{% block subtitle %}Manage USD to KES exchange rates{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">USD/KES Exchange Rates</h2>
+        
+        <div class="flex space-x-2">
+            <div class="text-right">
+                <div class="px-4 py-2 text-xl font-bold bg-blue-50 text-blue-700 rounded-lg mb-2">
+                    Base Rate: 1 USD = {{ current_rate|default('--') }} KES
+                </div>
+                <div class="px-4 py-2 text-lg font-semibold bg-green-50 text-green-700 rounded-lg mb-2">
+                    Deposit Rate: 1 USD = {% if sample_deposit and sample_deposit.success %}{{ (sample_deposit.forex_rate * 0.99)|default('--')|round(2) }}{% else %}--{% endif %} KES
+                    <span class="text-xs text-gray-600">(includes 1% fee)</span>
+                </div>
+                <div class="px-4 py-2 text-lg font-semibold bg-orange-50 text-orange-700 rounded-lg">
+                    Withdrawal Rate: 1 USD = {% if sample_withdrawal and sample_withdrawal.success %}{{ (sample_withdrawal.forex_rate * 0.985)|default('--')|round(2) }}{% else %}--{% endif %} KES
+                    <span class="text-xs text-gray-600">(includes 1.5% fee)</span>
+                </div>
+            </div>
+            
+            <span class="text-sm text-gray-500 self-end">
+                {% if updated_at %}
+                Last updated: {{ updated_at }}
+                {% else %}
+                No data available
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Exchange Rate Update Form -->
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-8">
+        <h3 class="font-semibold text-lg mb-3">Update Exchange Rate</h3>
+        
+        <form action="{{ url_for('admin_update_forex') }}" method="POST" class="flex flex-col sm:flex-row gap-4 items-end">
+            <div class="flex-1">
+                <label for="manual_rate" class="block text-sm font-medium text-gray-700 mb-1">Manual Rate (optional)</label>
+                <input type="text" id="manual_rate" name="manual_rate" placeholder="e.g. 130.45" 
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Leave empty to fetch from API</p>
+            </div>
+            
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Update Rate
+            </button>
+        </form>
+    </div>
+    
+    <!-- Sample Calculations -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Deposit Example -->
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h3 class="font-semibold text-lg text-green-800 mb-3">Sample Deposit (1,000 USD)</h3>
+            
+            {% if sample_deposit and sample_deposit.success %}
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">USD Amount:</span>
+                    <span class="font-medium">${{ sample_deposit.usd_amount|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Fee ({{ sample_deposit.fee_percent }}%):</span>
+                    <span class="font-medium text-red-600">-${{ sample_deposit.fee_usd|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm border-t border-green-200 pt-2">
+                    <span class="text-gray-600">Net USD:</span>
+                    <span class="font-medium">${{ sample_deposit.net_usd|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Deposit Forex Rate:</span>
+                    <span class="font-medium">{{ (sample_deposit.forex_rate * 0.99)|default('0')|round(2) }} KES per USD (with 1% fee)</span>
+                </div>
+                <div class="flex justify-between text-green-800 font-bold border-t border-green-200 pt-2 text-base">
+                    <span>KES Amount:</span>
+                    <span>KES {{ sample_deposit.kes_amount|default('0')|round(2) }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">No forex data available</p>
+            {% endif %}
+        </div>
+        
+        <!-- Withdrawal Example -->
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 class="font-semibold text-lg text-blue-800 mb-3">Sample Withdrawal (1,000 USD)</h3>
+            
+            {% if sample_withdrawal and sample_withdrawal.success %}
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">USD Amount:</span>
+                    <span class="font-medium">${{ sample_withdrawal.usd_amount|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Fee ({{ sample_withdrawal.fee_percent }}%):</span>
+                    <span class="font-medium text-red-600">-${{ sample_withdrawal.fee_usd|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm border-t border-blue-200 pt-2">
+                    <span class="text-gray-600">Net USD:</span>
+                    <span class="font-medium">${{ sample_withdrawal.net_usd|default('0')|round(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Withdrawal Forex Rate:</span>
+                    <span class="font-medium">{{ (sample_withdrawal.forex_rate * 0.985)|default('0')|round(2) }} KES per USD (with 1.5% fee)</span>
+                </div>
+                <div class="flex justify-between text-blue-800 font-bold border-t border-blue-200 pt-2 text-base">
+                    <span>KES Amount:</span>
+                    <span>KES {{ sample_withdrawal.kes_amount|default('0')|round(2) }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">No forex data available</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Rate History -->
+    <h3 class="font-semibold text-lg mb-4">Exchange Rate History</h3>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated At</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for rate in rate_history %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ rate.currency }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ rate.rate }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ rate.updated_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">No rate history available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">About Forex Rates</h2>
+    
+    <div class="space-y-4 text-gray-600">
+        <p>
+            The system fetches USD/KES exchange rates from Open Exchange Rates API every 12 hours.
+            These rates are used for calculating deposit and withdrawal amounts.
+        </p>
+        
+        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h3 class="font-semibold mb-2 text-yellow-800">Rate Structure</h3>
+            <ul class="list-disc list-inside space-y-1 text-sm">
+                <li>Base rate: The current market rate from Open Exchange Rates API</li>
+                <li>Deposit rate: Higher rate ({{ '%.2f' | format((132.90 / 129.50) * 100) }}% of base) with 1% fee applied</li>
+                <li>Withdrawal rate: Lower rate ({{ '%.2f' | format((126.20 / 129.50) * 100) }}% of base) with 1.5% fee applied</li>
+                <li>The rates displayed throughout the system include fees for transparency</li>
+            </ul>
+        </div>
+        
+        <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mt-4">
+            <h3 class="font-semibold mb-2 text-yellow-800">Fee Structure</h3>
+            <ul class="list-disc list-inside space-y-1 text-sm">
+                <li>Deposits: <span class="font-medium">1%</span> fee of the USD amount</li>
+                <li>Withdrawals: <span class="font-medium">1.5%</span> fee of the USD amount</li>
+                <li>Fees are applied to all transactions and are included in all calculations</li>
+                <li>When a user deposits USD, the fee is deducted from the USD amount before conversion</li>
+                <li>When a user withdraws USD, the fee is deducted from the USD amount before conversion</li>
+            </ul>
+        </div>
+        
+        <p>
+            You can manually update the exchange rate by entering a value in the form above.
+            If no value is entered, the system will fetch the latest rate from the API.
+        </p>
+    </div>
+</div>
+{% endblock %} 

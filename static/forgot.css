@@ -1,0 +1,147 @@
+/* Import base styles */
+@import 'styles.css';
+
+/* Forgot password specific styles */
+.forgot-card {
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 15px -3px rgba(96, 165, 250, 0.1),
+                0 4px 6px -2px rgba(96, 165, 250, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.forgot-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(96, 165, 250, 0.1);
+}
+
+/* Form input styles */
+.form-input {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    border-color: var(--der-volt-teal);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+    outline: none;
+}
+
+/* Password strength indicator */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    background: #edf2f7;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-weak { background-color: #fc8181; width: 33.33%; }
+.strength-medium { background-color: #f6e05e; width: 66.66%; }
+.strength-strong { background-color: #68d391; width: 100%; }
+
+/* OTP input styles */
+#otp {
+    letter-spacing: 0.1em;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+/* Loading animation for submit button */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Validation message styles */
+.validation-message {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.validation-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.error-message {
+    color: #e53e3e;
+}
+
+.error-message::before {
+    content: '⚠';
+    margin-right: 0.5rem;
+}
+
+/* Success container styles */
+.success-container {
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out;
+    background-color: rgba(96, 165, 250, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-container h3 {
+    color: #3B82F6;
+}
+
+.success-container p {
+    color: #60A5FA;
+}
+
+/* Loading button animation */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: loading 0.6s linear infinite;
+}
+
+@keyframes loading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .forgot-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+} 

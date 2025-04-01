@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Color scheme support -->
+    <meta name="color-scheme" content="light dark">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Der-volt transaction details">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Der-volt">
+    <meta name="application-name" content="Der-volt">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/pwa/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/pwa/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/pwa/icon-16x16.png') }}">
+    
+    <title>Transaction Details - Der-volt</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transactions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fix FontAwesome CORS issue by using a CDN link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* Dark mode styling for transactions page */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212 !important;
+                color: #f3f4f6 !important;
+            }
+            
+            .bg-white {
+                background-color: #121212 !important;
+            }
+            
+            .bg-gray-50 {
+                background-color: #1e1e1e !important;
+            }
+            
+            /* Navigation dark mode fixes */
+            nav.bg-white {
+                background-color: #1e1e1e !important;
+                border-bottom: 1px solid #374151 !important;
+            }
+            
+            #profileMenu {
+                background-color: #1e1e1e !important;
+                border-color: #374151 !important;
+            }
+            
+            #profileMenu .border-gray-100 {
+                border-color: #374151 !important;
+            }
+            
+            .text-gray-900 {
+                color: #f3f4f6 !important;
+            }
+            
+            .text-gray-600, .text-gray-500, .text-gray-700 {
+                color: #9ca3af !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left side -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="{{ url_for('dashboard') }}">
+                            <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Logo" class="h-8 w-auto">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-home mr-2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="{{ url_for('help') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-question-circle mr-2"></i>
+                            <span>Help & Support</span>
+                        </a>
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-3 focus:outline-none group pr-1 sm:pr-0" id="profileDropdown" data-user-id="{{ user.id }}">
+                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=3b82f6&color=fff&size=32&rounded=true" 
+                                 alt="Profile" 
+                                 class="h-7 w-7 sm:h-8 sm:w-8 rounded-full">
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-200 group-hover:rotate-180 hidden md:block"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 hidden transform origin-top-right transition-all duration-200" id="profileMenu">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <a href="{{ url_for('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-home mr-2 w-5 text-center"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2 w-5 text-center"></i>
+                                Settings
+                            </a>
+                            <a href="{{ url_for('help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-question-circle mr-2 w-5 text-center"></i>
+                                Help & Support
+                            </a>
+                            <div class="border-t border-gray-100 mt-1"></div>
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i>
+                                Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Button (visible on small screens) -->
+    <div class="fixed bottom-6 right-6 md:hidden z-50">
+        <button class="bg-primary-600 text-white p-3 rounded-full shadow-lg hover:bg-primary-700 transition-colors flex items-center justify-center w-12 h-12" id="mobileMenuButton">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Menu (visible on small screens) -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden" id="mobileMenuOverlay">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-xl transform transition-transform duration-300 translate-x-full" id="mobileMenuPanel">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-semibold text-lg">Menu</h3>
+                <button class="text-gray-500 hover:text-gray-700" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="py-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-home mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-cog mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('help') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-question-circle mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Help & Support</span>
+                </a>
+                <div class="border-t border-gray-100 my-2"></div>
+                <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mx-auto container px-4 py-8 max-w-6xl">
+        <!-- Header Section -->
+        <div class="mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Transaction Details</h1>
+                    <p class="mt-1 text-sm text-gray-500">Reference: {{ transaction.reference }}</p>
+                </div>
+                <a href="{{ url_for('transactions') }}" class="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Transactions
+                </a>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Transaction Card -->
+            <div class="lg:col-span-1">
+                <!-- Visual Transaction Card -->
+                <div class="bg-gray-900 text-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="p-6 text-center">
+                        <h2 class="text-xl font-bold mb-4 uppercase">
+                            {{ transaction.transaction_type|capitalize }}
+                        </h2>
+                        
+                        <!-- Currency Display -->
+                        <div class="my-4 flex justify-center">
+                            {% if transaction.currency == 'KES' %}
+                            <div class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
+                                KES
+                            </div>
+                            {% elif transaction.currency == 'USD' %}
+                            <div class="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-2xl font-bold">
+                                $
+                            </div>
+                            {% else %}
+                            <div class="h-20 w-20 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold">
+                                {{ transaction.currency|default('USD') }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Currency Amount -->
+                        <div class="my-6">
+                            <!-- Primary Amount Display -->
+                            <div class="text-4xl font-bold my-2">
+                                {% if transaction.currency == 'USD' %}
+                                    ${{ '%.2f'|format(transaction.amount) }}
+                                {% elif transaction.currency == 'KES' %}
+                                    KSH {{ '%.2f'|format(transaction.amount) }}
+                                {% else %}
+                                    {{ transaction.currency|default('USD') }} {{ '%.2f'|format(transaction.amount) }}
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Transaction Type Indicator -->
+                            <div class="inline-block mt-2 px-3 py-1 rounded-full 
+                                {% if transaction.transaction_type == 'deposit' %}
+                                    bg-green-100 text-green-800
+                                {% elif transaction.transaction_type == 'withdrawal' %}
+                                    bg-red-100 text-red-800
+                                {% else %}
+                                    bg-blue-100 text-blue-800
+                                {% endif %}">
+                                {{ transaction.transaction_type|capitalize }}
+                            </div>
+                        </div>
+                        
+                        <!-- Transaction IDs -->
+                        <div class="mt-6 text-gray-300 text-sm border-t border-gray-700 pt-4">
+                            <div class="my-2 font-semibold text-white">DERIV ID: {{ transaction.reference }}</div>
+                            {% if transaction.payment_method == 'mpesa' and transaction.external_reference %}
+                            <div class="my-3 py-2 px-4 rounded-lg bg-green-800 text-white">
+                                <span class="font-semibold">M-PESA ID:</span> {{ transaction.external_reference }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Transaction Status Card -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden mt-6">
+                    <div class="border-b border-gray-200 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-gray-900">Transaction Status</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="inline-flex items-center justify-center h-8 w-8 rounded-full 
+                                {% if transaction.status == 'completed' %}
+                                    bg-green-100 text-green-600
+                                {% elif transaction.status == 'pending' %}
+                                    bg-yellow-100 text-yellow-600
+                                {% elif transaction.status == 'failed' %}
+                                    bg-red-100 text-red-600
+                                {% endif %}
+                                mr-3">
+                                <i class="fas 
+                                    {% if transaction.status == 'completed' %}
+                                        fa-check
+                                    {% elif transaction.status == 'pending' %}
+                                        fa-clock
+                                    {% elif transaction.status == 'failed' %}
+                                        fa-times
+                                    {% endif %}
+                                "></i>
+                            </span>
+                            <div>
+                                <p class="font-medium text-gray-900">
+                                    Status: <span class="
+                                        {% if transaction.status == 'completed' %}
+                                            text-green-600
+                                        {% elif transaction.status == 'pending' %}
+                                            text-yellow-600
+                                        {% elif transaction.status == 'failed' %}
+                                            text-red-600
+                                        {% endif %}
+                                    ">{{ transaction.status|capitalize }}</span>
+                                </p>
+                                <p class="text-sm text-gray-500">Last updated: {{ transaction.updated_at }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if transaction.description %}
+                        <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                            <h3 class="text-sm font-medium text-gray-700 mb-1">Transaction Note:</h3>
+                            <p class="text-gray-600">{{ transaction.description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transaction Details -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-gray-900">Transaction Details</h2>
+                    </div>
+                    <div class="p-6">
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Reference</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.reference }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Transaction Type</dt>
+                                <dd class="mt-1 text-sm">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        {% if transaction.transaction_type == 'deposit' %}
+                                            bg-green-100 text-green-800
+                                        {% elif transaction.transaction_type == 'withdrawal' %}
+                                            bg-red-100 text-red-800
+                                        {% else %}
+                                            bg-blue-100 text-blue-800
+                                        {% endif %}">
+                                        {{ transaction.transaction_type|capitalize }}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Amount</dt>
+                                <dd class="mt-1 text-sm font-medium {% if transaction.transaction_type == 'deposit' %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if transaction.currency == 'USD' %}
+                                        ${{ '%.2f'|format(transaction.amount) }}
+                                    {% elif transaction.currency == 'KES' %}
+                                        KSH {{ '%.2f'|format(transaction.amount) }}
+                                    {% else %}
+                                        {{ transaction.currency|default('USD') }} {{ '%.2f'|format(transaction.amount) }}
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                <dd class="mt-1 text-sm">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        {% if transaction.status == 'completed' %}
+                                            bg-green-100 text-green-800
+                                        {% elif transaction.status == 'pending' %}
+                                            bg-yellow-100 text-yellow-800
+                                        {% else %}
+                                            bg-red-100 text-red-800
+                                        {% endif %}">
+                                        {{ transaction.status|capitalize }}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Payment Method</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.payment_method|default('N/A')|capitalize }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">External Reference</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.external_reference|default('N/A') }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Created At</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.created_at }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Updated At</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.updated_at }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Account Number</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ transaction.account_number }}</dd>
+                            </div>
+                            
+                            <!-- Display forex information if available -->
+                            {% if forex_data %}
+                            <div class="col-span-2 mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                <h3 class="text-sm font-medium text-blue-800 mb-2">Forex Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <dt class="text-xs font-medium text-gray-500">Exchange Rate</dt>
+                                        <dd class="mt-1 text-sm font-medium text-gray-900">
+                                            1 USD = {{ forex_data.forex_rate|round(2) }} KES
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs font-medium text-gray-500">Fee</dt>
+                                        <dd class="mt-1 text-sm font-medium text-red-600">
+                                            {{ forex_data.fee_percent|default('--') }}% ({{ "$%.2f"|format(forex_data.fee_usd|float) if forex_data.fee_usd else '--' }} USD)
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs font-medium text-gray-500">USD Amount (Net)</dt>
+                                        <dd class="mt-1 text-sm font-medium text-gray-900">
+                                            ${{ "%.2f"|format(forex_data.net_usd|float) if forex_data.net_usd else '--' }}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs font-medium text-gray-500">KES Amount</dt>
+                                        <dd class="mt-1 text-sm font-medium text-gray-900">
+                                            KES {{ forex_data.converted_amount_kes|round|int if forex_data.converted_amount_kes else '--' }}
+                                        </dd>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+                
+                <!-- What happens next section -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-gray-900">What Happens Next?</h2>
+                    </div>
+                    <div class="p-6">
+                        {% if transaction.status == 'pending' %}
+                            {% if transaction.transaction_type == 'deposit' %}
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">1</div>
+                                    <p class="text-gray-700">Your deposit request has been received.</p>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">2</div>
+                                    <p class="text-gray-700">Our team is verifying the payment.</p>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">3</div>
+                                    <p class="text-gray-700">Once confirmed, the amount will be credited to your account.</p>
+                                </div>
+                                <div class="mt-4 p-4 bg-blue-50 rounded-md">
+                                    <p class="text-sm text-blue-700">This process typically takes 1-3 business hours.</p>
+                                </div>
+                            </div>
+                            {% elif transaction.transaction_type == 'withdrawal' %}
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">1</div>
+                                    <p class="text-gray-700">Your withdrawal request has been received.</p>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">2</div>
+                                    <p class="text-gray-700">Our team is processing your request.</p>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">3</div>
+                                    <p class="text-gray-700">Once approved, the funds will be sent to your payment method.</p>
+                                </div>
+                                <div class="mt-4 p-4 bg-blue-50 rounded-md">
+                                    <p class="text-sm text-blue-700">This process typically takes 1-3 business hours.</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% elif transaction.status == 'completed' %}
+                            <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-green-800">Transaction Complete</h3>
+                                        <div class="mt-2 text-sm text-green-700">
+                                            <p>This transaction has been completed successfully. The changes have been reflected in your account balance.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif transaction.status == 'failed' %}
+                            <div class="bg-red-50 rounded-lg p-4 mb-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-red-800">Transaction Failed</h3>
+                                        <div class="mt-2 text-sm text-red-700">
+                                            <p>Unfortunately, this transaction could not be processed. Please contact customer support if you need assistance.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle Profile Dropdown
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileMenu = document.getElementById('profileMenu');
+            
+            if (profileDropdown && profileMenu) {
+                profileDropdown.addEventListener('click', function() {
+                    profileMenu.classList.toggle('hidden');
+                });
+                
+                // Hide menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!profileDropdown.contains(event.target) && !profileMenu.contains(event.target)) {
+                        profileMenu.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+            const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+            const mobileMenuClose = document.getElementById('mobileMenuClose');
+            
+            function closeMobileMenu() {
+                if (mobileMenuPanel && mobileMenuOverlay) {
+                    mobileMenuPanel.classList.remove('translate-x-0');
+                    mobileMenuPanel.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        mobileMenuOverlay.classList.add('hidden');
+                    }, 300);
+                }
+            }
+            
+            if (mobileMenuButton && mobileMenuOverlay && mobileMenuPanel) {
+                mobileMenuButton.addEventListener('click', function() {
+                    // If the menu is already visible, close it
+                    if (!mobileMenuOverlay.classList.contains('hidden')) {
+                        closeMobileMenu();
+                    } else {
+                        // Otherwise, open it
+                        mobileMenuOverlay.classList.remove('hidden');
+                        setTimeout(() => {
+                            mobileMenuPanel.classList.add('translate-x-0');
+                            mobileMenuPanel.classList.remove('translate-x-full');
+                        }, 50);
+                    }
+                });
+            }
+            
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+            
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', function(event) {
+                    if (event.target === mobileMenuOverlay) {
+                        closeMobileMenu();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Color scheme support -->
+    <meta name="color-scheme" content="light dark">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Der-volt help and support">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Der-volt">
+    <meta name="application-name" content="Der-volt">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/pwa/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/pwa/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/pwa/icon-16x16.png') }}">
+    
+    <title>Help & Support - Der-volt</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Navigation fix styles -->
+    <style>
+        /* Force navigation visibility on medium and larger screens */
+        @media (min-width: 768px) {
+            .nav-links {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        /* Update mobile menu button styling */
+        @media (max-width: 768px) {
+            #mobileMenuButton {
+                background-color: #3B82F6 !important; /* Use blue color */
+                box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+            }
+        }
+        
+        /* Improve spacing for support cards */
+        .support-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Fix FAQ layout */
+        .faq-content {
+            transition: max-height 0.3s ease-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        /* Fix dark mode visibility for PWA info box */
+        @media (prefers-color-scheme: dark) {
+            .pwa-info-box {
+                background-color: rgba(30, 58, 138, 0.2) !important;
+                border-color: #3B82F6 !important;
+            }
+            
+            .pwa-info-box h4 {
+                color: #93c5fd !important;
+            }
+            
+            .pwa-info-box ul li {
+                color: #e5e7eb !important;
+            }
+            
+            /* Installation standalone section */
+            .install-section {
+                border-color: #4B5563 !important;
+                background-color: #1F2937 !important;
+            }
+            
+            .install-section h3 {
+                color: #f3f4f6 !important;
+            }
+            
+            .install-section p, .install-section li {
+                color: #D1D5DB !important;
+            }
+            
+            .install-section h4 {
+                color: #93c5fd !important;
+            }
+        }
+        
+        /* Standalone installation section */
+        .install-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            background-color: #f9fafb;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .install-section:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .install-icon {
+            background-color: #eff6ff;
+            color: #3b82f6;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="font-poppins bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left side -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="{{ url_for('dashboard') }}">
+                            <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Logo" class="h-8 w-auto">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-6 nav-links">
+                        <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-home mr-2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="{{ url_for('help') }}" class="text-primary-600 hover:text-primary-700 transition-colors flex items-center">
+                            <i class="fas fa-question-circle mr-2"></i>
+                            <span>Help & Support</span>
+                        </a>
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-3 focus:outline-none group" id="profileDropdown">
+                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=3b82f6&color=fff&size=32&rounded=true" 
+                                 alt="Profile" 
+                                 class="h-8 w-8 rounded-full">
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-200 group-hover:rotate-180"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 hidden transform origin-top-right transition-all duration-200" id="profileMenu">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <a href="{{ url_for('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-home mr-2 w-5 text-center"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2 w-5 text-center"></i>
+                                Settings
+                            </a>
+                            <a href="{{ url_for('help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 bg-gray-50">
+                                <i class="fas fa-question-circle mr-2 w-5 text-center"></i>
+                                Help & Support
+                            </a>
+                            <div class="border-t border-gray-100 mt-1"></div>
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i>
+                                Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Button (visible on small screens) -->
+    <div class="fixed bottom-6 right-6 md:hidden z-50">
+        <button class="bg-primary-600 text-white p-3 rounded-full shadow-lg hover:bg-primary-700 transition-colors" id="mobileMenuButton">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Menu (visible on small screens) -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden" id="mobileMenuOverlay">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-xl transform transition-transform duration-300 translate-x-full" id="mobileMenuPanel">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-semibold text-lg">Menu</h3>
+                <button class="text-gray-500 hover:text-gray-700" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="py-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-home mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-cog mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('help') }}" class="flex items-center px-4 py-3 text-gray-700 bg-gray-100">
+                    <i class="fas fa-question-circle mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Help & Support</span>
+                </a>
+                <div class="border-t border-gray-100 my-2"></div>
+                <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pt-20 pb-8 bg-white min-h-screen">
+        <div class="flex flex-col max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Quick Support Options -->
+            <section class="bg-white rounded-xl shadow-sm p-6 mb-8 hover:shadow-md transition-all duration-300">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-headset mr-3 text-primary-500"></i>
+                    Quick Support Options
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- WhatsApp Support -->
+                    <a href="#" class="support-card group block bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                <i class="fab fa-whatsapp text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-medium text-gray-900">WhatsApp Support</h3>
+                                <p class="text-xs text-gray-600">Chat with us instantly</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Phone Support -->
+                    <a href="#" class="support-card group block bg-gradient-to-br from-primary-50 to-primary-100 p-4 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                <i class="fas fa-phone-alt text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-medium text-gray-900">Phone Support</h3>
+                                <p class="text-xs text-gray-600">Call us directly</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- SMS Support -->
+                    <a href="#" class="support-card group block bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-shrink-0 w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                <i class="fas fa-sms text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-medium text-gray-900">SMS Support</h3>
+                                <p class="text-xs text-gray-600">Text us anytime</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Common Issues & Solutions -->
+            <section class="bg-white rounded-xl shadow-sm p-6 mb-8 hover:shadow-md transition-all duration-300">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-question-circle mr-3 text-primary-500"></i>
+                    Common Issues & Solutions
+                </h2>
+                <div class="space-y-4">
+                    <div class="faq-item border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
+                        <button class="faq-button w-full px-4 py-3 text-left bg-white hover:bg-gray-50 focus:outline-none transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-key text-primary-500"></i>
+                                    </div>
+                                    <span class="text-base font-medium text-gray-900">How do I reset my password?</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-500 transform transition-transform duration-200"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <p class="text-gray-700">Click on the "Forgot Password" link on the login page. Enter your email address, and we'll send you instructions to reset your password.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
+                        <button class="faq-button w-full px-4 py-3 text-left bg-white hover:bg-gray-50 focus:outline-none transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-credit-card text-primary-500"></i>
+                                    </div>
+                                    <span class="text-base font-medium text-gray-900">How do I update my payment information?</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-500 transform transition-transform duration-200"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <p class="text-gray-700">Go to Settings > Payment Method to update your payment details. You can choose between M-Pesa, Bank Transfer, or Card Payment methods.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200">
+                        <button class="faq-button w-full px-4 py-3 text-left bg-white hover:bg-gray-50 focus:outline-none transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-history text-primary-500"></i>
+                                    </div>
+                                    <span class="text-base font-medium text-gray-900">How do I view my transaction history?</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-500 transform transition-transform duration-200"></i>
+                            </div>
+                        </button>
+                        <div class="faq-content px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <p class="text-gray-700">Click on the Transactions tab in the navigation menu. You can filter and sort your transactions by date, amount, or type.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USD to KES Conversion Section -->
+            <section class="bg-white rounded-xl shadow-sm p-6 mb-8 hover:shadow-md transition-all duration-300">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-exchange-alt mr-3 text-primary-500"></i>
+                    USD to KES Conversion
+                </h2>
+                <div class="space-y-4">
+                    <p class="text-gray-700">
+                        Der-Volt uses real-time USD to KES exchange rates from Open Exchange Rates API, updated every 12 hours.
+                    </p>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-lg text-blue-800 mb-3">How It Works</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>Deposits:</strong> You deposit in USD, and the system converts it to KES using a favorable deposit rate.</li>
+                            <li><strong>Withdrawals:</strong> The system converts your USD to KES for withdrawal using the withdrawal rate.</li>
+                            <li><strong>Spreads:</strong> Different rates apply for deposits vs withdrawals to account for market fluctuations.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Deposit Example -->
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <h4 class="font-semibold text-green-800 mb-3">Deposit Example (1,000 USD)</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>USD Amount:</span>
+                                    <span class="font-medium">$1,000.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Fee (1%):</span>
+                                    <span class="text-red-600">-$10.00</span>
+                                </div>
+                                <div class="flex justify-between border-t border-green-200 pt-1">
+                                    <span>Net USD:</span>
+                                    <span class="font-medium">$990.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Deposit Rate:</span>
+                                    <span>~132.90 KES per USD</span>
+                                </div>
+                                <div class="flex justify-between text-green-800 font-bold border-t border-green-200 pt-1">
+                                    <span>KES Amount:</span>
+                                    <span>~131,571 KES</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Withdrawal Example -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h4 class="font-semibold text-blue-800 mb-3">Withdrawal Example (1,000 USD)</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>USD Amount:</span>
+                                    <span class="font-medium">$1,000.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Fee (1.5%):</span>
+                                    <span class="text-red-600">-$15.00</span>
+                                </div>
+                                <div class="flex justify-between border-t border-blue-200 pt-1">
+                                    <span>Net USD:</span>
+                                    <span class="font-medium">$985.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Withdrawal Rate:</span>
+                                    <span>~126.20 KES per USD</span>
+                                </div>
+                                <div class="flex justify-between text-blue-800 font-bold border-t border-blue-200 pt-1">
+                                    <span>KES Amount:</span>
+                                    <span>~124,307 KES</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <h4 class="font-semibold text-yellow-800 mb-2">Fee Structure</h4>
+                        <ul class="list-disc list-inside space-y-1 text-gray-700">
+                            <li><strong>Deposits:</strong> 1% fee of the USD amount</li>
+                            <li><strong>Withdrawals:</strong> 1.5% fee of the USD amount</li>
+                        </ul>
+                        <p class="mt-2 text-sm text-gray-600">Rates are updated every 12 hours to ensure you get competitive exchange rates.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- PWA Installation Instructions (Standalone Section) -->
+            <section class="install-section">
+                <div class="flex items-start mb-4">
+                    <div class="install-icon">
+                        <i class="fas fa-mobile-alt text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900">How do I install Der-volt on my device?</h3>
+                </div>
+                
+                <div class="space-y-4">
+                    <p class="text-gray-700">Der-volt is available as a Progressive Web App (PWA), which means you can install it on your device and use it just like any other app.</p>
+                    
+                    <div class="pwa-info-box border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 rounded-r-lg">
+                        <h4 class="font-semibold text-blue-700">Benefits of installing Der-volt as an app:</h4>
+                        <ul class="list-disc ml-5 mt-2 space-y-1 text-gray-700">
+                            <li>Access Der-volt directly from your home screen</li>
+                            <li>Use Der-volt even when you're offline</li>
+                            <li>Faster loading times</li>
+                            <li>Full-screen experience without browser controls</li>
+                            <li>Receive important notifications</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <h4 class="font-semibold text-gray-800 mb-2">On Chrome, Edge, or Android:</h4>
+                            <ol class="list-decimal ml-5 space-y-1">
+                                <li>Look for the install icon <i class="fas fa-download text-blue-600"></i> in the address bar or menu</li>
+                                <li>Click "Install" or "Add to Home Screen"</li>
+                                <li>Follow the prompts to complete installation</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <h4 class="font-semibold text-gray-800 mb-2">On iOS (Safari):</h4>
+                            <ol class="list-decimal ml-5 space-y-1">
+                                <li>Tap the Share button <i class="fas fa-share-square text-blue-600"></i></li>
+                                <li>Scroll and select "Add to Home Screen"</li>
+                                <li>Tap "Add" in the top-right corner</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex items-center">
+                        <span class="text-gray-700 mr-2">You can also use the install button</span>
+                        <button class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+                            <i class="fas fa-download mr-1"></i>Install App
+                        </button>
+                        <span class="text-gray-700 ml-2">which appears at the bottom of the page when installation is available.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Form -->
+            <section class="bg-white rounded-xl shadow-sm p-6 mb-8 hover:shadow-md transition-all duration-300">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-envelope mr-3 text-primary-500"></i>
+                    Contact Support
+                </h2>
+                <form id="contactForm" class="space-y-4" enctype="multipart/form-data">
+                    <div class="form-field">
+                        <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-tag text-gray-400"></i>
+                            </div>
+                            <select id="subject" name="subject" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">Select a subject</option>
+                                <option value="account">Account Issues</option>
+                                <option value="payment">Payment Problems</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <div class="relative">
+                            <div class="absolute top-3 left-3 flex items-center pointer-events-none">
+                                <i class="fas fa-comment text-gray-400"></i>
+                            </div>
+                            <textarea id="message" name="message" rows="4" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="How can we help you?"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="attachments" class="block text-sm font-medium text-gray-700 mb-1">Attachments</label>
+                        <div class="file-upload p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 transition-colors">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Drag and drop files here, or click to browse</p>
+                                <p class="text-xs text-gray-500 mt-1">(Maximum file size: 10MB)</p>
+                                <input type="file" id="attachments" name="attachments" multiple class="hidden" />
+                            </div>
+                        </div>
+                        <div id="fileList" class="mt-3 space-y-2"></div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="addAttachmentBtn" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
+                            <i class="fas fa-paperclip mr-2"></i>
+                            Add Attachment
+                        </button>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Toggle profile dropdown
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+
+        if (profileDropdown && profileMenu) {
+            profileDropdown.addEventListener('click', function() {
+                profileMenu.classList.toggle('hidden');
+                if (!profileMenu.classList.contains('hidden')) {
+                    profileMenu.classList.add('scale-100', 'opacity-100');
+                } else {
+                    profileMenu.classList.remove('scale-100', 'opacity-100');
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target) && !profileMenu.contains(event.target)) {
+                    profileMenu.classList.add('hidden');
+                    profileMenu.classList.remove('scale-100', 'opacity-100');
+                }
+            });
+        }
+        
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        
+        if (mobileMenuButton && mobileMenuOverlay && mobileMenuPanel) {
+            mobileMenuButton.addEventListener('click', function() {
+                // If the menu is already visible, close it
+                if (!mobileMenuOverlay.classList.contains('hidden')) {
+                    closeMobileMenu();
+                } else {
+                    // Otherwise, open it
+                    mobileMenuOverlay.classList.remove('hidden');
+                    setTimeout(() => {
+                        mobileMenuPanel.classList.add('translate-x-0');
+                        mobileMenuPanel.classList.remove('translate-x-full');
+                    }, 50);
+                }
+            });
+        }
+        
+        function closeMobileMenu() {
+            if (mobileMenuPanel && mobileMenuOverlay) {
+                mobileMenuPanel.classList.remove('translate-x-0');
+                mobileMenuPanel.classList.add('translate-x-full');
+                setTimeout(() => {
+                    mobileMenuOverlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+        
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', closeMobileMenu);
+        }
+        
+        if (mobileMenuOverlay) {
+            mobileMenuOverlay.addEventListener('click', function(event) {
+                if (event.target === mobileMenuOverlay) {
+                    closeMobileMenu();
+                }
+            });
+        }
+        
+        // Toggle FAQ Items
+        document.querySelectorAll('.faq-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('.fa-chevron-down');
+                
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+                
+                // Add smooth height animation
+                if (!content.classList.contains('hidden')) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                } else {
+                    content.style.maxHeight = '0';
+                }
+            });
+        });
+        
+        // File upload handling
+        const fileUpload = document.querySelector('.file-upload');
+        const fileInput = document.getElementById('attachments');
+        const fileList = document.getElementById('fileList');
+        const addAttachmentBtn = document.getElementById('addAttachmentBtn');
+        
+        if (fileUpload && fileInput && fileList && addAttachmentBtn) {
+            fileUpload.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileUpload.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUpload.classList.add('border-primary-500', 'bg-primary-50/50');
+            });
+            
+            fileUpload.addEventListener('dragleave', () => {
+                fileUpload.classList.remove('border-primary-500', 'bg-primary-50/50');
+            });
+            
+            fileUpload.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUpload.classList.remove('border-primary-500', 'bg-primary-50/50');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileList();
+                }
+            });
+            
+            addAttachmentBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', updateFileList);
+            
+            function updateFileList() {
+                fileList.innerHTML = '';
+                
+                Array.from(fileInput.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200';
+                    
+                    const fileSize = file.size < 1024 * 1024 
+                        ? `${(file.size / 1024).toFixed(1)} KB` 
+                        : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                    
+                    fileItem.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-file text-primary-500"></i>
+                            <span class="text-sm font-medium text-gray-700">${file.name}</span>
+                            <span class="text-xs text-gray-500">(${fileSize})</span>
+                        </div>
+                        <button type="button" class="text-red-500 hover:text-red-600 p-1" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+        }
+        
+        // Handle Contact Form
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                
+                // Simulate form submission
+                showToast('Message sent successfully! We will get back to you soon.', 'success');
+                this.reset();
+                if (fileList) {
+                    fileList.innerHTML = '';
+                }
+            });
+        }
+    </script>
+    
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col space-y-4 items-end max-w-md"></div>
+
+    <!-- Toast Notification Script -->
+    <script>
+        // Toast notification system
+        const toastContainer = document.getElementById('toast-container');
+        
+        /**
+         * Show a toast notification
+         * @param {string} message - The message to display
+         * @param {string} type - The type of notification (success, error, info, warning)
+         * @param {number} duration - How long to show the notification in ms
+         */
+        function showToast(message, type = 'success', duration = 5000) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'transform transition-all duration-300 ease-out translate-x-full opacity-0 flex items-center p-4 mb-3 max-w-md rounded-lg shadow-lg';
+            
+            // Set background color based on type
+            let icon, bgColor, textColor;
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-50 border-l-4 border-green-500';
+                    textColor = 'text-green-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 text-green-500 mr-3"><i class="fas fa-check"></i></div>';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-50 border-l-4 border-red-500';
+                    textColor = 'text-red-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-red-100 text-red-500 mr-3"><i class="fas fa-times"></i></div>';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-50 border-l-4 border-yellow-500';
+                    textColor = 'text-yellow-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-yellow-100 text-yellow-500 mr-3"><i class="fas fa-exclamation"></i></div>';
+                    break;
+                case 'info':
+                    bgColor = 'bg-blue-50 border-l-4 border-blue-500';
+                    textColor = 'text-blue-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 text-blue-500 mr-3"><i class="fas fa-info"></i></div>';
+                    break;
+                default:
+                    bgColor = 'bg-gray-50 border-l-4 border-gray-500';
+                    textColor = 'text-gray-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 text-gray-500 mr-3"><i class="fas fa-bell"></i></div>';
+            }
+            
+            toast.className += ` ${bgColor}`;
+            
+            // Set inner HTML
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${icon}
+                    <div class="flex-grow ${textColor} text-sm font-medium">
+                        ${message}
+                    </div>
+                    <button type="button" class="ml-auto -mx-1.5 -my-1.5 ${textColor} hover:text-gray-900 rounded-lg p-1.5 inline-flex h-8 w-8 focus:ring-2 focus:ring-gray-300" aria-label="Close">
+                        <span class="sr-only">Close</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add toast to container
+            toastContainer.appendChild(toast);
+            
+            // Get close button and add event listener
+            const closeButton = toast.querySelector('button');
+            closeButton.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Trigger entry animation
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 10);
+            
+            // Set automatic removal after duration
+            const timeoutId = setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+            
+            // Store timeout ID on the element for potential early removal
+            toast._timeoutId = timeoutId;
+            
+            return toast;
+        }
+        
+        /**
+         * Remove a toast with animation
+         * @param {HTMLElement} toast - The toast element to remove
+         */
+        function removeToast(toast) {
+            clearTimeout(toast._timeoutId);
+            
+            // Trigger exit animation
+            toast.classList.add('translate-x-full', 'opacity-0');
+            
+            // Remove from DOM after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    </script>
+    
+    <!-- Authentication script -->
+    <script src="/static/auth.js"></script>
+    
+    <!-- Dark mode script -->
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
+    
+    <!-- PWA Install Button (hidden by default, shown by JavaScript when installation is available) -->
+    <div class="fixed bottom-4 right-4 hidden" id="pwa-install-button" data-pwa-install>
+        <button class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+            <i class="fas fa-download"></i>
+            <span class="hidden sm:inline">Install App</span>
+        </button>
+    </div>
+
+    <!-- PWA Registration Script -->
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+    <script src="{{ url_for('static', filename='prefetch.js') }}"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html> 

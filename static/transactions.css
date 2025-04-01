@@ -1,0 +1,42 @@
+/* Import base styles */
+@import 'styles.css';
+
+/* Transaction type badges */
+.bg-green-100 {
+    background-color: rgba(110, 231, 183, 0.1);
+}
+
+.bg-red-100 {
+    background-color: rgba(252, 165, 165, 0.1);
+}
+
+/* Status badges */
+.bg-blue-100 {
+    background-color: rgba(147, 197, 253, 0.1);
+}
+
+.bg-yellow-100 {
+    background-color: rgba(252, 211, 77, 0.1);
+}
+
+/* Table hover effects */
+tr.hover\:bg-gray-50:hover {
+    background-color: rgba(249, 250, 251, 0.5);
+}
+
+/* Filter inputs */
+select, input {
+    min-width: 150px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .flex-col {
+        gap: 1rem;
+    }
+
+    select, input {
+        width: 100%;
+        min-width: unset;
+    }
+} 

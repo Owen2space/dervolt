@@ -1,0 +1,333 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Transaction Details{% endblock %}
+
+{% block page_title %}Transaction Details: {{ transaction.reference }}{% endblock %}
+{% block page_subtitle %}Detailed information about this transaction{% endblock %}
+
+{% block content %}
+<!-- Action Buttons -->
+<div class="mb-6 flex flex-wrap gap-3">
+    <a href="{{ url_for('admin_transactions') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Back to Transactions
+    </a>
+    
+    {% if transaction.status == 'pending' %}
+    <button type="button" onclick="confirmApprove('{{ transaction.reference }}')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+        <i class="fas fa-check-circle mr-2"></i>
+        Approve Transaction
+    </button>
+    
+    <button type="button" onclick="confirmReject('{{ transaction.reference }}')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+        <i class="fas fa-ban mr-2"></i>
+        Reject Transaction
+    </button>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Transaction Card -->
+    <div class="lg:col-span-1">
+        <!-- Visual Transaction Card (Similar to the image) -->
+        <div class="bg-gray-900 text-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6 text-center">
+                <h2 class="text-xl font-bold mb-4 uppercase">
+                    {{ transaction.transaction_type|capitalize }}
+                </h2>
+                
+                <!-- Flag and Currency Display -->
+                <div class="my-4 flex justify-center">
+                    {% if transaction.currency == 'KES' %}
+                    <div class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
+                        KES
+                    </div>
+                    {% elif transaction.currency == 'USD' %}
+                    <div class="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-2xl font-bold">
+                        $
+                    </div>
+                    {% else %}
+                    <div class="h-20 w-20 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-2xl font-bold">
+                        {{ transaction.currency|default('USD') }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Local Currency Amount -->
+                <div class="my-6">
+                    <!-- Primary Amount Display -->
+                    <div class="text-4xl font-bold my-2">
+                        {% if transaction.currency == 'USD' %}
+                            ${{ '%.2f'|format(transaction.amount) }}
+                        {% elif transaction.currency == 'KES' %}
+                            KSH {{ '%.2f'|format(transaction.amount) }}
+                        {% else %}
+                            {{ transaction.currency|default('USD') }} {{ '%.2f'|format(transaction.amount) }}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Transaction Type Indicator -->
+                    <div class="inline-block mt-2 px-3 py-1 rounded-full 
+                        {% if transaction.transaction_type == 'deposit' %}
+                            bg-green-100 text-green-800
+                        {% elif transaction.transaction_type == 'withdrawal' %}
+                            bg-red-100 text-red-800
+                        {% else %}
+                            bg-blue-100 text-blue-800
+                        {% endif %}">
+                        {{ transaction.transaction_type|capitalize }}
+                    </div>
+                </div>
+                
+                <!-- Transaction IDs -->
+                <div class="mt-6 text-gray-300 text-sm border-t border-gray-700 pt-4">
+                    <div class="my-2 font-semibold text-white">DERIV ID: {{ transaction.reference }}</div>
+                    {% if transaction.payment_method == 'mpesa' and transaction.external_reference %}
+                    <div class="my-3 py-2 px-4 rounded-lg bg-green-800 text-white">
+                        <span class="font-semibold">M-PESA ID:</span> {{ transaction.external_reference }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transaction Status Card -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mt-6">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Transaction Status</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full 
+                        {% if transaction.status == 'completed' %}
+                            bg-green-100 text-green-600
+                        {% elif transaction.status == 'pending' %}
+                            bg-yellow-100 text-yellow-600
+                        {% elif transaction.status == 'failed' %}
+                            bg-red-100 text-red-600
+                        {% endif %}
+                        mr-3">
+                        <i class="fas 
+                            {% if transaction.status == 'completed' %}
+                                fa-check
+                            {% elif transaction.status == 'pending' %}
+                                fa-clock
+                            {% elif transaction.status == 'failed' %}
+                                fa-times
+                            {% endif %}
+                        "></i>
+                    </span>
+                    <div>
+                        <p class="font-medium text-gray-900">
+                            Status: <span class="
+                                {% if transaction.status == 'completed' %}
+                                    text-green-600
+                                {% elif transaction.status == 'pending' %}
+                                    text-yellow-600
+                                {% elif transaction.status == 'failed' %}
+                                    text-red-600
+                                {% endif %}
+                            ">{{ transaction.status|capitalize }}</span>
+                        </p>
+                        <p class="text-sm text-gray-500">Last updated: {{ transaction.updated_at }}</p>
+                    </div>
+                </div>
+                
+                {% if transaction.description %}
+                <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                    <h3 class="text-sm font-medium text-gray-700 mb-1">Transaction Note:</h3>
+                    <p class="text-gray-600">{{ transaction.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transaction Details -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Transaction Details</h2>
+            </div>
+            <div class="p-6">
+                <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Reference</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.reference }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Transaction Type</dt>
+                        <dd class="mt-1 text-sm">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                {% if transaction.transaction_type == 'deposit' %}
+                                    bg-green-100 text-green-800
+                                {% elif transaction.transaction_type == 'withdrawal' %}
+                                    bg-red-100 text-red-800
+                                {% else %}
+                                    bg-blue-100 text-blue-800
+                                {% endif %}">
+                                {{ transaction.transaction_type|capitalize }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Amount</dt>
+                        <dd class="mt-1 text-sm font-medium {% if transaction.transaction_type == 'deposit' %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if transaction.currency == 'USD' %}
+                                ${{ '%.2f'|format(transaction.amount) }}
+                            {% elif transaction.currency == 'KES' %}
+                                KSH {{ '%.2f'|format(transaction.amount) }}
+                            {% else %}
+                                {{ transaction.currency|default('USD') }} {{ '%.2f'|format(transaction.amount) }}
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1 text-sm">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                {% if transaction.status == 'completed' %}
+                                    bg-green-100 text-green-800
+                                {% elif transaction.status == 'pending' %}
+                                    bg-yellow-100 text-yellow-800
+                                {% else %}
+                                    bg-red-100 text-red-800
+                                {% endif %}">
+                                {{ transaction.status|capitalize }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Payment Method</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.payment_method|default('N/A')|capitalize }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">External Reference</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.external_reference|default('N/A') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Created At</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.created_at }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Updated At</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.updated_at }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+        
+        <!-- User Information -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">User Information</h2>
+            </div>
+            <div class="p-6">
+                <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <a href="{{ url_for('admin_user_detail', user_id=transaction.user_id) }}" class="text-indigo-600 hover:text-indigo-900">
+                                {{ transaction.first_name }} {{ transaction.last_name }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Email</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.email }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Account Number</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.account_number }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">User ID</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ transaction.user_id }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div id="modalIcon" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Confirm Action
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" id="modal-description">
+                                Are you sure you want to perform this action?
+                            </p>
+                            <div class="mt-4">
+                                <label for="actionNotes" class="block text-sm font-medium text-gray-700">Notes (optional)</label>
+                                <textarea id="actionNotes" rows="3" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <form id="confirmForm" method="POST" action="">
+                    <input type="hidden" name="notes" value="">
+                    <button type="submit" id="actionButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Confirm
+                    </button>
+                </form>
+                <button type="button" onclick="hideModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmReject(reference) {
+        document.getElementById('modal-title').textContent = 'Reject Transaction';
+        document.getElementById('modal-description').textContent = `Are you sure you want to reject this transaction (${reference})? This action cannot be undone.`;
+        document.getElementById('confirmForm').action = `/admin/transaction/reject/${reference}`;
+        document.getElementById('actionButton').textContent = 'Reject';
+        document.getElementById('actionButton').className = 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm';
+        document.getElementById('modalIcon').className = 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10';
+        document.getElementById('modalIcon').innerHTML = '<i class="fas fa-times text-red-600"></i>';
+        document.getElementById('confirmModal').classList.remove('hidden');
+    }
+    
+    function confirmApprove(reference) {
+        document.getElementById('modal-title').textContent = 'Approve Transaction';
+        document.getElementById('modal-description').textContent = `Are you sure you want to approve this transaction (${reference})? This will update the account balance. This action cannot be undone.`;
+        document.getElementById('confirmForm').action = `/admin/transaction/approve/${reference}`;
+        document.getElementById('actionButton').textContent = 'Approve';
+        document.getElementById('actionButton').className = 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm';
+        document.getElementById('modalIcon').className = 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10';
+        document.getElementById('modalIcon').innerHTML = '<i class="fas fa-check text-green-600"></i>';
+        document.getElementById('confirmModal').classList.remove('hidden');
+    }
+    
+    function hideModal() {
+        document.getElementById('confirmModal').classList.add('hidden');
+        
+        // Transfer notes from the textarea to the hidden input
+        const notesTextarea = document.getElementById('actionNotes');
+        const notesInput = document.querySelector('input[name="notes"]');
+        if (notesTextarea && notesInput) {
+            notesInput.value = notesTextarea.value;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - Der-volt Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .sidebar-link.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .sidebar-link.active i {
+            color: white;
+        }
+        .sidebar-link:hover:not(.active) {
+            background-color: #f3f4f6;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .sidebar.show {
+                display: block;
+            }
+        }
+        /* Ensure all tables have horizontal scrolling when needed */
+        table {
+            width: 100%;
+            table-layout: auto;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+    {% block head_extras %}{% endblock %}
+</head>
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm z-10">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left side with logo and toggle -->
+                <div class="flex items-center">
+                    <button id="sidebarToggle" class="mr-4 text-gray-600 focus:outline-none md:hidden">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <div class="flex-shrink-0 flex items-center">
+                        <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Admin" class="h-8 w-auto">
+                        <span class="ml-2 text-gray-900 font-medium">Admin Portal</span>
+                    </div>
+                </div>
+
+                <!-- Right side with admin info -->
+                <div class="flex items-center">
+                    <div class="relative inline-block text-left">
+                        <button id="adminDropdown" class="flex items-center space-x-3 focus:outline-none">
+                            <div class="h-8 w-8 rounded-md bg-indigo-600 flex items-center justify-center text-white font-semibold">
+                                {% if admin and admin.username %}{{ admin.username[0]|upper }}{% else %}A{% endif %}
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <div class="text-sm font-medium text-gray-900">{% if admin and admin.username %}{{ admin.username }}{% else %}Admin{% endif %}</div>
+                                <div class="text-xs text-gray-500">{% if admin and admin.role %}{{ admin.role|capitalize }}{% else %}Admin{% endif %}</div>
+                            </div>
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        <!-- Admin Dropdown Menu -->
+                        <div id="adminDropdownMenu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50">
+                            <div class="py-1">
+                                <div class="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
+                                    <div class="font-medium">{% if admin and admin.username %}{{ admin.username }}{% else %}Admin{% endif %}</div>
+                                    <div class="text-xs text-gray-500">{% if admin and admin.email %}{{ admin.email }}{% else %}admin@example.com{% endif %}</div>
+                                </div>
+                                <a href="{{ url_for('admin_dashboard') }}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-3 text-gray-400 group-hover:text-gray-500"></i>
+                                    Dashboard
+                                </a>
+                                <a href="{{ url_for('admin_settings') }}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-cog mr-3 text-gray-400 group-hover:text-gray-500"></i>
+                                    Settings
+                                </a>
+                                <a href="{{ url_for('admin_broadcast') }}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-bullhorn mr-3 text-gray-400 group-hover:text-gray-500"></i>
+                                    Broadcast
+                                </a>
+                            </div>
+                            <div class="py-1">
+                                <a href="{{ url_for('admin_logout') }}" class="group flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-3 text-red-400 group-hover:text-red-500"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar w-64 bg-white shadow-md flex-shrink-0 z-10">
+            <div class="h-full overflow-y-auto py-4">
+                <nav class="px-4 space-y-1">
+                    <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_dashboard') %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt mr-3 text-lg {% if request.path == url_for('admin_dashboard') %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_users') or '/admin/user/' in request.path %}active{% endif %}">
+                        <i class="fas fa-users mr-3 text-lg {% if request.path == url_for('admin_users') or '/admin/user/' in request.path %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        User Management
+                    </a>
+                    <a href="{{ url_for('admin_transactions') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_transactions') or '/admin/transaction/' in request.path %}active{% endif %}">
+                        <i class="fas fa-exchange-alt mr-3 text-lg {% if request.path == url_for('admin_transactions') or '/admin/transaction/' in request.path %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        Transactions
+                    </a>
+                    <a href="{{ url_for('admin_settings') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_settings') %}active{% endif %}">
+                        <i class="fas fa-cog mr-3 text-lg {% if request.path == url_for('admin_settings') %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        System Settings
+                    </a>
+                    <a href="{{ url_for('admin_broadcast') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_broadcast') %}active{% endif %}">
+                        <i class="fas fa-bullhorn mr-3 text-lg {% if request.path == url_for('admin_broadcast') %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        Broadcast
+                    </a>
+                    <a href="{{ url_for('admin_logs') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_logs') %}active{% endif %}">
+                        <i class="fas fa-history mr-3 text-lg {% if request.path == url_for('admin_logs') %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        Logs
+                    </a>
+                    
+                    <!-- System Monitoring Section -->
+                    <div class="space-y-2 pt-3 border-t border-gray-200 mt-3">
+                        <div class="px-3 text-xs uppercase text-gray-500 font-semibold">
+                            System Monitoring
+                        </div>
+                    
+                        <a href="{{ url_for('admin_logs') }}?type=error" 
+                           class="flex items-center rounded-md px-3 py-2 text-sm font-medium 
+                           {{ 'text-indigo-600 bg-indigo-50' if request.path == url_for('admin_logs') and request.args.get('type') == 'error' else 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50' }}">
+                            <i class="mr-3 fas fa-exclamation-triangle {{ 'text-indigo-600' if request.path == url_for('admin_logs') and request.args.get('type') == 'error' else 'text-gray-500' }}"></i>
+                            Error Logs
+                        </a>
+                        
+                        <a href="{{ url_for('admin_logs') }}?type=security" 
+                           class="flex items-center rounded-md px-3 py-2 text-sm font-medium 
+                           {{ 'text-indigo-600 bg-indigo-50' if request.path == url_for('admin_logs') and request.args.get('type') == 'security' else 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50' }}">
+                            <i class="mr-3 fas fa-shield-alt {{ 'text-indigo-600' if request.path == url_for('admin_logs') and request.args.get('type') == 'security' else 'text-gray-500' }}"></i>
+                            Security Logs
+                        </a>
+                    </div>
+
+                    {% if admin.role == 'super_admin' %}
+                    <a href="{{ url_for('admin_manage_admins') }}" class="sidebar-link group flex items-center px-2 py-3 text-sm font-medium rounded-md {% if request.path == url_for('admin_manage_admins') %}active{% endif %}">
+                        <i class="fas fa-user-shield mr-3 text-lg {% if request.path == url_for('admin_manage_admins') %}text-white{% else %}text-gray-400 group-hover:text-gray-500{% endif %}"></i>
+                        Admin Management
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto py-6 px-4 sm:px-6 lg:px-8 bg-gray-50">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for category, message in messages %}
+                            {% if "Your session has expired due to inactivity" not in message %}
+                            <div class="p-4 rounded-lg {% if category == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %} mb-3">
+                                <div class="flex">
+                                    <i class="fas {% if category == 'error' %}fa-exclamation-circle text-red-500{% elif category == 'success' %}fa-check-circle text-green-500{% else %}fa-info-circle text-blue-500{% endif %} mr-3 mt-0.5"></i>
+                                    <p>{{ message }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page heading and content -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {% block page_title %}Dashboard{% endblock %}
+                </h1>
+                <p class="mt-1 text-sm text-gray-600">
+                    {% block page_subtitle %}Overview and summary{% endblock %}
+                </p>
+            </div>
+
+            <!-- Main content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Dropdown toggle
+        const adminDropdown = document.getElementById('adminDropdown');
+        const adminDropdownMenu = document.getElementById('adminDropdownMenu');
+
+        if (adminDropdown && adminDropdownMenu) {
+            adminDropdown.addEventListener('click', function() {
+                adminDropdownMenu.classList.toggle('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!adminDropdown.contains(event.target) && !adminDropdownMenu.contains(event.target)) {
+                    adminDropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        // Sidebar toggle for mobile
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (sidebarToggle && sidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                const isMobile = window.innerWidth < 768;
+                if (isMobile && !sidebar.contains(event.target) && !sidebarToggle.contains(event.target) && sidebar.classList.contains('show')) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+    
+    <!-- Ensure all tables have horizontal scrolling -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all tables that aren't already in a scrollable container
+            const tables = document.querySelectorAll('table:not(.table-container table)');
+            
+            tables.forEach(function(table) {
+                // Check if parent already has overflow-x-auto
+                if (!table.parentElement.classList.contains('overflow-x-auto') && !table.parentElement.classList.contains('table-container')) {
+                    // Wrap table in a scrollable container
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'table-container overflow-x-auto';
+                    table.parentNode.insertBefore(wrapper, table);
+                    wrapper.appendChild(table);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

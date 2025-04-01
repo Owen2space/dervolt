@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Statement - {{ user.first_name }} {{ user.last_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add html2pdf.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+        }
+        @media print {
+            body {
+                background-color: white;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .print-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        .statement-header {
+            background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+            color: white;
+        }
+        .transaction-row:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            color: rgba(243, 244, 246, 0.8);
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+    <div class="watermark">DER-VOLT</div>
+
+    <!-- Print/Download Controls -->
+    <div class="fixed top-4 right-4 flex space-x-2 no-print">
+        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+        </button>
+        
+        <button onclick="downloadPDF()" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download PDF
+        </button>
+        
+        <button onclick="window.close()" class="px-4 py-2 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Close
+        </button>
+    </div>
+
+    <div id="statement-container" class="print-container max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Statement Header -->
+        <div class="statement-header p-6 md:p-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Logo" class="h-12 mr-4">
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold">{{ settings.get('site_name', 'Der-Volt') }}</h1>
+                        <p class="text-sm opacity-80">Financial Services</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <h2 class="text-lg md:text-xl font-semibold">Transaction Statement</h2>
+                    <p class="text-sm opacity-80">Generated: {{ generated_at }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="p-6 md:p-8 border-b border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Customer Information</h3>
+                    <div class="text-lg font-medium text-gray-900">{{ user.first_name }} {{ user.last_name }}</div>
+                    <div class="text-gray-600">ID: {{ user.id }}</div>
+                    <div class="text-gray-600">{{ user.email }}</div>
+                    <div class="text-gray-600">{{ user.phone_number }}</div>
+                    <div class="text-gray-600">Account Since: {{ user.created_at|truncate(10, true, '') }}</div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">Statement Summary</h3>
+                    <div class="text-gray-600">Period: {{ period_start }} to {{ period_end }}</div>
+                    <div class="text-gray-600">Total Accounts: {{ accounts|length }}</div>
+                    <div class="text-gray-600">Total Transactions: {{ transactions|length }}</div>
+                    {% set deposits = transactions|selectattr('transaction_type', 'equalto', 'deposit')|list %}
+                    {% set withdrawals = transactions|selectattr('transaction_type', 'equalto', 'withdrawal')|list %}
+                    <div class="text-gray-600">Deposits: {{ deposits|length }}</div>
+                    <div class="text-gray-600">Withdrawals: {{ withdrawals|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Summary -->
+        <div class="p-6 md:p-8 border-b border-gray-200">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Account Summary</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Balance</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for account in accounts %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ account.account_number }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ account.account_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    {{ account.account_type|capitalize }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                ${{ '%.2f'|format(account.balance) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                    {% if account.status == 'active' %}
+                                        bg-green-100 text-green-800
+                                    {% else %}
+                                        bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ account.status|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="p-6 md:p-8">
+            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Transaction History</h3>
+            {% if transactions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for transaction in transactions %}
+                        <tr class="transaction-row">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ transaction.created_at|truncate(19, true, '') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ transaction.reference }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ transaction.account_number }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                {{ transaction.description or '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                    {% if transaction.transaction_type == 'deposit' %}
+                                        bg-green-100 text-green-800
+                                    {% else %}
+                                        bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ transaction.transaction_type|capitalize }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm 
+                                {% if transaction.transaction_type == 'deposit' %}
+                                    text-green-600
+                                {% else %}
+                                    text-red-600
+                                {% endif %}">
+                                ${{ '%.2f'|format(transaction.amount) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                    {% if transaction.status == 'completed' %}
+                                        bg-green-100 text-green-800
+                                    {% elif transaction.status == 'pending' %}
+                                        bg-yellow-100 text-yellow-800
+                                    {% else %}
+                                        bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ transaction.status|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                No transactions found for this period.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 p-6 md:p-8 text-center text-sm text-gray-500 border-t border-gray-200">
+            <p>This is an official statement from {{ settings.get('site_name', 'Der-Volt') }}.</p>
+            <p class="mt-1">For any inquiries, please contact us at {{ settings.get('contact_email', 'support@der-volt.com') }}.</p>
+            <div class="mt-4 flex justify-center space-x-3">
+                <div class="text-xs bg-gray-200 px-3 py-1 rounded-full">Statement ID: ST-{{ user.id }}-{{ generated_at|replace(' ', '-')|replace(':', '') }}</div>
+                <div class="text-xs bg-gray-200 px-3 py-1 rounded-full">Page 1 of 1</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            // Hide control buttons temporarily
+            const controlButtons = document.querySelector('.no-print');
+            controlButtons.style.display = 'none';
+            
+            // Configure pdf options
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: 'transaction-statement-{{ user.id }}-{{ generated_at|replace(" ", "-")|replace(":", "") }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Get the element to convert
+            const element = document.getElementById('statement-container');
+            
+            // Generate PDF
+            html2pdf().from(element).set(options).save().then(() => {
+                // Show buttons again after PDF is generated
+                controlButtons.style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html> 

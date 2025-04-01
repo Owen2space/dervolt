@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Color scheme support -->
+    <meta name="color-scheme" content="light dark">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Der-volt transactions">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Der-volt">
+    <meta name="application-name" content="Der-volt">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/pwa/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/pwa/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/pwa/icon-16x16.png') }}">
+    
+    <title>Transactions - Der-volt</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='transactions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fix FontAwesome CORS issue by using a CDN link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Chart.js for financial graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <style>
+        /* Dark mode styling for transactions page */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212 !important;
+                color: #f3f4f6 !important;
+            }
+            
+            .bg-white {
+                background-color: #121212 !important;
+            }
+            
+            .bg-gray-50 {
+                background-color: #1e1e1e !important;
+            }
+            
+            /* Navigation dark mode fixes */
+            nav.bg-white {
+                background-color: #1e1e1e !important;
+                border-bottom: 1px solid #374151 !important;
+            }
+            
+            #profileMenu {
+                background-color: #1e1e1e !important;
+                border-color: #374151 !important;
+            }
+            
+            #profileMenu .border-gray-100 {
+                border-color: #374151 !important;
+            }
+            
+            .text-gray-900 {
+                color: #f3f4f6 !important;
+            }
+            
+            .text-gray-600, .text-gray-500, .text-gray-700 {
+                color: #9ca3af !important;
+            }
+            
+            /* Mobile menu dark mode fixes */
+            #mobileMenuButton {
+                background-color: #3b82f6 !important;
+            }
+            
+            #mobileMenuPanel {
+                background-color: #1e1e1e !important;
+                border-left: 1px solid #374151 !important;
+            }
+            
+            #mobileMenuPanel h3 {
+                color: #f3f4f6 !important;
+            }
+            
+            #mobileMenuPanel a {
+                color: #d1d5db !important;
+                border-color: #374151 !important;
+            }
+            
+            #mobileMenuPanel a:hover {
+                background-color: #1f2937 !important;
+            }
+            
+            #mobileMenuPanel a.text-red-600 {
+                color: #ef4444 !important;
+            }
+            
+            #mobileMenuPanel a.text-red-600:hover {
+                background-color: rgba(239, 68, 68, 0.1) !important;
+            }
+            
+            #mobileMenuPanel .border-gray-100 {
+                border-color: #374151 !important;
+            }
+
+            /* Transaction specific styles for dark mode */
+            .transaction-header h1 {
+                color: #f3f4f6 !important;
+            }
+            
+            .transaction-header p {
+                color: #9ca3af !important;
+            }
+            
+            input, select {
+                background-color: #1e1e1e !important;
+                border-color: #374151 !important;
+                color: #f3f4f6 !important;
+            }
+            
+            table th {
+                background-color: #1f2937 !important;
+                color: #f3f4f6 !important;
+            }
+            
+            table td {
+                border-color: #374151 !important;
+                color: #d1d5db !important;
+            }
+            
+            .empty-state {
+                background-color: #1e1e1e !important;
+            }
+            
+            .empty-state h3 {
+                color: #f3f4f6 !important;
+            }
+            
+            .empty-state p {
+                color: #9ca3af !important;
+            }
+            
+            /* Financial Performance Graph dark mode styles */
+            .financial-card > div {
+                background-color: #1f2937 !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            }
+            
+            .deposits-card h3,
+            .withdrawals-card h3,
+            .profit-card h3 {
+                color: #f3f4f6 !important;
+            }
+            
+            .financial-card .text-sm.font-medium {
+                color: #d1d5db !important;
+            }
+            
+            [data-period].active {
+                background-color: #3b82f6 !important;
+                color: #ffffff !important;
+                box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5) !important;
+            }
+            
+            .bg-gray-100 {
+                background-color: rgba(31, 41, 55, 0.8) !important;
+            }
+            
+            .chart-tooltip.dark-mode {
+                background-color: #1f2937 !important;
+                border-color: #374151 !important;
+            }
+            
+            .chart-tooltip .tooltip-date {
+                color: #f3f4f6 !important;
+            }
+            
+            .chart-tooltip .tooltip-value {
+                color: #d1d5db !important;
+            }
+        }
+
+        /* Navigation fix styles */
+        @media (min-width: 768px) {
+            .nav-links {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        /* Update mobile menu button styling for both light and dark modes */
+        @media (max-width: 768px) {
+            #mobileMenuButton {
+                background-color: #3B82F6 !important; /* Use blue color */
+                box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+                border-radius: 9999px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 48px !important;
+                height: 48px !important;
+            }
+        }
+        
+        /* Dark mode fixes for the mobile menu */
+        @media (prefers-color-scheme: dark) {
+            #mobileMenuButton {
+                background-color: #3b82f6 !important;
+            }
+            
+            #mobileMenuPanel {
+                background-color: #1e1e1e !important;
+                border-left: 1px solid #374151 !important;
+            }
+            
+            #mobileMenuPanel h3 {
+                color: #f3f4f6 !important;
+            }
+            
+            #mobileMenuPanel a {
+                color: #d1d5db !important;
+                border-color: #374151 !important;
+            }
+            
+            #mobileMenuPanel a:hover {
+                background-color: #1f2937 !important;
+            }
+            
+            #mobileMenuPanel a.text-red-600 {
+                color: #ef4444 !important;
+            }
+            
+            #mobileMenuPanel a.text-red-600:hover {
+                background-color: rgba(239, 68, 68, 0.1) !important;
+            }
+            
+            #mobileMenuPanel .border-gray-100 {
+                border-color: #374151 !important;
+            }
+        }
+        
+        /* Modern Apple-like Financial Performance Graph styles - ENHANCED VERSION */
+        .financial-card > div {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), 0 0 1px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            height: 100%;
+        }
+        
+        .financial-card > div:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07), 0 2px 5px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+        }
+        
+        /* Make financial cards more responsive */
+        @media (max-width: 640px) {
+            .financial-card > div {
+                padding: 0.75rem !important;
+            }
+            
+            .financial-card h3 {
+                font-size: 1.5rem !important;
+                margin-bottom: 0.25rem;
+            }
+            
+            .financial-card p {
+                font-size: 0.75rem !important;
+            }
+            
+            .financial-card .text-sm {
+                font-size: 0.7rem !important;
+            }
+        }
+        
+        /* Financial Performance Grid Layout Improvements */
+        .financial-performance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .financial-performance-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .financial-performance-grid .profit-card {
+                grid-column: span 2;
+                margin-top: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .financial-performance-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .financial-performance-grid .profit-card {
+                grid-column: span 1;
+            }
+        }
+        
+        .deposits-card h3 {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+        
+        .withdrawals-card h3 {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+        
+        .profit-card h3 {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+        
+        [data-period] {
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.875rem;
+        }
+        
+        [data-period]:hover {
+            background-color: rgba(243, 244, 246, 0.9);
+            transform: translateY(-1px);
+        }
+        
+        [data-period].active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+            transform: translateY(-1px);
+        }
+        
+        .chart-container {
+            overflow: hidden;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: 400px !important; /* Increased height for better visualization */
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            padding: 5px !important; /* REDUCED PADDING for better graph visibility */
+            transition: all 0.3s ease;
+        }
+
+        /* Chart scrolling container for horizontal scrolling */
+        .chart-scroll-container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+            -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+        }
+
+        /* Show scrollbar for desktop */
+        .chart-scroll-container::-webkit-scrollbar {
+            height: 8px; /* Make scrollbar visible */
+            display: block; /* Ensure scrollbar is displayed */
+        }
+
+        .chart-scroll-container::-webkit-scrollbar-thumb {
+            background-color: rgba(59, 130, 246, 0.5);
+            border-radius: 10px;
+        }
+
+        .chart-scroll-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Sticky table header styles */
+        thead.sticky, thead.transactions-table-header {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* Dark mode for sticky header */
+        @media (prefers-color-scheme: dark) {
+            thead.sticky, thead.transactions-table-header {
+                background-color: #1f2937 !important; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+        }
+
+        /* Chart scroll inner - will be dynamically sized based on data points */
+        .chart-scroll-inner {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        /* Scroll indicators styling */
+        .scroll-indicator {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(59, 130, 246, 0.9);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+
+        .scroll-indicator:hover {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .scroll-left {
+            left: 10px;
+        }
+
+        .scroll-right {
+            right: 10px;
+        }
+
+        /* Dark mode adjustments for scroll indicators */
+        @media (prefers-color-scheme: dark) {
+            .scroll-indicator {
+                background-color: rgba(37, 99, 235, 0.9);
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Hide scrollbar on mobile for a cleaner look, but keep scrolling functionality */
+            .chart-scroll-container::-webkit-scrollbar {
+                display: none;
+            }
+            
+            /* Add visual indicator for scrollability on mobile */
+            .chart-container::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, 
+                    transparent 0%, 
+                    rgba(59, 130, 246, 0.5) 25%, 
+                    rgba(59, 130, 246, 0.5) 75%, 
+                    transparent 100%);
+                opacity: 0.7;
+                border-radius: 0 0 20px 20px;
+                pointer-events: none;
+            }
+        }
+        
+        /* Chart tooltip enhanced for Apple-like appearance */
+        .chart-tooltip {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.08);
+            width: auto;
+            max-width: 280px;
+            border-radius: 16px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background-color: rgba(255, 255, 255, 0.85);
+            transform-origin: center bottom;
+            animation: tooltip-appear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+        }
+        
+        @keyframes tooltip-appear {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .tooltip-date {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #111827;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+        }
+        
+        .tooltip-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        
+        .tooltip-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tooltip-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        
+        .tooltip-value {
+            margin-left: auto;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #111827;
+            letter-spacing: -0.01em;
+        }
+        
+        /* Enhanced dark mode styling */
+        @media (prefers-color-scheme: dark) {
+            .chart-container {
+                background-color: rgba(23, 23, 23, 0.8) !important;
+                border: 1px solid rgba(75, 85, 99, 0.2);
+            }
+            
+            .chart-tooltip {
+                background-color: rgba(30, 30, 30, 0.85) !important;
+                border: 1px solid rgba(75, 85, 99, 0.3);
+            }
+            
+            .tooltip-date {
+                color: #e5e7eb;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .tooltip-label {
+                color: #9ca3af;
+            }
+            
+            .tooltip-value {
+                color: #e5e7eb;
+            }
+            
+            .financial-card > div {
+                background-color: rgba(23, 23, 23, 0.8) !important;
+                border: 1px solid rgba(75, 85, 99, 0.15);
+            }
+        }
+        
+        /* Animation for data updates */
+        @keyframes pulse-fade {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .animate-pulse-fade {
+            animation: pulse-fade 1.5s ease-in-out infinite;
+        }
+
+        .financial-performance-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .financial-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: visible;
+        }
+
+        .financial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .percentage-change {
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .percentage-change.positive {
+            color: #28a745;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        .percentage-change.negative {
+            color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .card-content {
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            margin-top: 10px;
+        }
+
+        .card-icon {
+            margin-right: 15px;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .deposit-card .card-icon {
+            color: #28a745;
+        }
+
+        .withdrawal-card .card-icon {
+            color: #dc3545;
+        }
+
+        .profit-card .card-icon {
+            color: #007bff;
+        }
+
+        .card-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: visible;
+            flex-grow: 1;
+            text-overflow: clip;
+            word-break: keep-all;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .card-amount {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .financial-performance-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card-amount {
+                font-size: 1.3rem;
+            }
+            
+            .card-icon {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .financial-performance-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .financial-card {
+                padding: 15px;
+            }
+            
+            .card-amount {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Make sure dark mode still works properly */
+        @media (prefers-color-scheme: dark) {
+            .financial-card {
+                background-color: rgba(23, 23, 23, 0.8) !important;
+            }
+        }
+
+        /* Improved financial card styling */
+        .grid {
+            width: 100%;
+        }
+        
+        /* Percentage change styling */
+        #deposit-percentage, #withdrawal-percentage, #profit-percentage {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        #deposit-percentage.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: rgb(16, 185, 129);
+        }
+        
+        #deposit-percentage.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+        
+        #withdrawal-percentage.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: rgb(16, 185, 129);
+        }
+        
+        #withdrawal-percentage.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+        
+        #profit-percentage.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: rgb(16, 185, 129);
+        }
+        
+        #profit-percentage.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: rgb(239, 68, 68);
+        }
+        
+        /* Chart scroll styling */
+        .chart-scroll-container::-webkit-scrollbar {
+            height: 8px;
+            background: transparent;
+        }
+        
+        .chart-scroll-container::-webkit-scrollbar-thumb {
+            background-color: rgba(59, 130, 246, 0.5);
+            border-radius: 4px;
+        }
+        
+        .chart-scroll-container::-webkit-scrollbar-track {
+            background: rgba(229, 231, 235, 0.3);
+            border-radius: 4px;
+        }
+        
+        /* Dark mode adjustments */
+        @media (prefers-color-scheme: dark) {
+            .chart-wrapper {
+                background-color: rgba(23, 23, 23, 0.8) !important;
+            }
+            
+            .chart-scroll-container::-webkit-scrollbar-track {
+                background: rgba(55, 65, 81, 0.3);
+            }
+            
+            .scroll-hint {
+                color: #9ca3af;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chart-container {
+                min-width: 600px !important;
+            }
+            
+            .scroll-hint {
+                display: block !important;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .scroll-hint {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            
+            .chart-wrapper:hover .scroll-hint {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="font-poppins bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left side -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="{{ url_for('dashboard') }}">
+                            <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Logo" class="h-8 w-auto">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-home mr-2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="{{ url_for('help') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-question-circle mr-2"></i>
+                            <span>Help & Support</span>
+                        </a>
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-3 focus:outline-none group pr-1 sm:pr-0" id="profileDropdown" data-user-id="{{ user.id }}">
+                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=3b82f6&color=fff&size=32&rounded=true" 
+                                 alt="Profile" 
+                                 class="h-7 w-7 sm:h-8 sm:w-8 rounded-full">
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-200 group-hover:rotate-180 hidden md:block"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 hidden transform origin-top-right transition-all duration-200" id="profileMenu">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <a href="{{ url_for('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-home mr-2 w-5 text-center"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2 w-5 text-center"></i>
+                                Settings
+                            </a>
+                            <a href="{{ url_for('help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-question-circle mr-2 w-5 text-center"></i>
+                                Help & Support
+                            </a>
+                            <div class="border-t border-gray-100 mt-1"></div>
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i>
+                                Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Button (visible on small screens) -->
+    <div class="fixed bottom-6 right-6 md:hidden z-50">
+        <button class="bg-primary-600 text-white p-3 rounded-full shadow-lg hover:bg-primary-700 transition-colors flex items-center justify-center w-12 h-12" id="mobileMenuButton">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Menu (visible on small screens) -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden" id="mobileMenuOverlay">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-xl transform transition-transform duration-300 translate-x-full" id="mobileMenuPanel">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-semibold text-lg">Menu</h3>
+                <button class="text-gray-500 hover:text-gray-700" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="py-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-home mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-cog mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('help') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-question-circle mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Help & Support</span>
+                </a>
+                <div class="border-t border-gray-100 my-2"></div>
+                <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto pt-20 pb-12 px-4 sm:px-6 lg:px-8">
+        <!-- Transactions Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Transaction History</h1>
+                <p class="mt-1 text-sm text-gray-500">View and manage your transactions</p>
+            </div>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                New Transaction
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+                    <input type="text" id="search" name="search" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Search transactions...">
+                </div>
+
+                <!-- Type Filter -->
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                    <select id="type" name="type" 
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">All Types</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                        <option value="transfer">Transfer</option>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="status" name="status" 
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="">All Statuses</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+
+                <!-- Date Range -->
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <select id="date" name="date" 
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="overflow-hidden shadow-md rounded-lg mt-6">
+            <div class="px-4 py-3 bg-gray-100 border-b flex justify-between items-center">
+                <h2 class="text-lg font-medium">Transaction History</h2>
+                
+                <!-- Exchange Rate Box -->
+                <div class="hidden sm:flex items-center bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <span class="text-sm font-medium text-blue-800 mr-2">USD/KES Rates:</span>
+                    <div class="text-sm">
+                        <div class="bg-white text-blue-800 px-2 py-1 mb-1 rounded">
+                            <span class="font-medium">Deposit:</span> 
+                            <span class="font-semibold deposit-rate-value">Loading...</span>
+                        </div>
+                        <div class="bg-white text-blue-800 px-2 py-1 rounded">
+                            <span class="font-medium">Withdraw:</span> 
+                            <span class="font-semibold withdrawal-rate-value">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 transactions-table-header sticky top-0 z-10">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date & Time
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount (USD)
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount (KES)
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Reference
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for transaction in transactions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if transaction.created_at and transaction.created_at is not string and transaction.created_at is not none %}
+                                    {{ transaction.created_at.strftime('%b %d, %Y, %I:%M %p') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if transaction.transaction_type == 'deposit' %}
+                                        bg-green-100 text-green-800
+                                    {% elif transaction.transaction_type == 'withdrawal' %}
+                                        bg-red-100 text-red-800
+                                    {% else %}
+                                        bg-blue-100 text-blue-800
+                                    {% endif %}">
+                                    {{ transaction.transaction_type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${{ transaction.amount }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if transaction.metadata %}
+                                    {% set metadata = transaction.metadata|tojson|fromjson %}
+                                    {% if metadata and metadata.converted_amount_kes %}
+                                        KES {{ metadata.converted_amount_kes|round|int }}
+                                        <div class="text-xs text-gray-500">
+                                            Rate: {{ metadata.forex_rate|round(2) }}
+                                        </div>
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if transaction.status == 'completed' %}
+                                        bg-green-100 text-green-800
+                                    {% elif transaction.status == 'pending' %}
+                                        bg-yellow-100 text-yellow-800
+                                    {% else %}
+                                        bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {{ transaction.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <a href="{{ url_for('transaction_detail', reference=transaction.reference) }}" class="text-indigo-600 hover:text-indigo-900 underline">
+                                    {{ transaction.reference }}
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                {% if not transactions %}
+                <div class="text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                        <i class="fas fa-exchange-alt text-blue-500 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">No transactions yet</h3>
+                    <p class="mt-2 text-gray-500">Your transactions will appear here once you start making them</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Financial Performance Section -->
+        <div class="mt-10 mb-6">
+            <!-- Section Title -->
+            <div class="financial-performance-title mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white"
+                        style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; letter-spacing: -0.02em;">
+                        Financial Performance
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"
+                       style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;">
+                        Track your deposits, withdrawals, and profits over time
+                    </p>
+                </div>
+                <div class="inline-flex bg-gray-100 dark:bg-gray-800 p-1 rounded-full self-start sm:self-center shadow-sm"
+                     style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(0, 0, 0, 0.03);">
+                    <button class="time-period-button px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300" data-period="1M">1M</button>
+                    <button class="time-period-button px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300" data-period="3M">3M</button>
+                    <button class="time-period-button px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300" data-period="6M">6M</button>
+                    <button class="time-period-button px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300 active" data-period="1Y">1Y</button>
+                    <button class="time-period-button px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all duration-300" data-period="ALL">All</button>
+                </div>
+            </div>
+
+            <!-- Simplified Financial Cards - Single Row Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Deposits Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-green-600 dark:text-green-400">Total Deposits</h3>
+                        <div id="deposit-percentage" class="text-sm font-medium px-2 py-1 rounded-md bg-opacity-20 inline-flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-2">
+                        <i class="fas fa-arrow-circle-up text-3xl text-green-500 mr-3"></i>
+                        <div id="total-deposits" class="text-2xl font-bold">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Withdrawals Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-red-600 dark:text-red-400">Total Withdrawals</h3>
+                        <div id="withdrawal-percentage" class="text-sm font-medium px-2 py-1 rounded-md bg-opacity-20 inline-flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-2">
+                        <i class="fas fa-arrow-circle-down text-3xl text-red-500 mr-3"></i>
+                        <div id="total-withdrawals" class="text-2xl font-bold">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Profit Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400">Net Profit</h3>
+                        <div id="profit-percentage" class="text-sm font-medium px-2 py-1 rounded-md bg-opacity-20 inline-flex items-center">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center mt-2">
+                        <i class="fas fa-chart-line text-3xl text-blue-500 mr-3"></i>
+                        <div id="total-profit" class="text-2xl font-bold">$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Container with Horizontal Scroll -->
+            <div class="chart-wrapper" style="position: relative; margin-top: 20px; border-radius: 12px; background-color: rgba(255, 255, 255, 0.7); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                <div class="chart-scroll-container" style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: rgba(59, 130, 246, 0.5) transparent; padding: 10px 5px;">
+                    <div class="chart-container" id="chart-container" style="height: 400px; min-width: 800px;">
+                        <canvas id="financial-chart"></canvas>
+                    </div>
+                </div>
+                <!-- Scroll indicators - only visible when hovering -->
+                <div class="scroll-hint" style="position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: #6b7280; pointer-events: none;">
+                    <i class="fas fa-arrows-alt-h mr-1"></i> Scroll horizontally to view more data
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if transactions %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm mt-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">20</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            1
+                        </a>
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            2
+                        </a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chart colors
+            const colors = {
+                deposits: {
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    pointBackgroundColor: 'rgba(40, 167, 69, 1)'
+                },
+                withdrawals: {
+                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    pointBackgroundColor: 'rgba(220, 53, 69, 1)'
+                },
+                profit: {
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    pointBackgroundColor: 'rgba(0, 123, 255, 1)'
+                }
+            };
+
+            // Function to fetch data from the API
+            function fetchTransactionData(period = '1Y') {
+                // Get the current user ID from the URL (for user transactions page)
+                const urlParts = window.location.pathname.split('/');
+                // Look for URL pattern /transactions/<user_id>
+                let userId = null;
+                if (urlParts.length > 2 && urlParts[1] === 'transactions' && !isNaN(urlParts[2])) {
+                    userId = urlParts[2];
+                }
+                
+                // Construct the API URL with user_id if available
+                let apiUrl = `/api/transaction-data?period=${period}`;
+                if (userId) {
+                    apiUrl += `&user_id=${userId}`;
+                }
+                
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update the summary cards
+                            updateSummaryCards(data.summary);
+                            
+                            // Update the chart
+                            updateChart(data.labels, data.deposits, data.withdrawals, data.profits);
+                        } else {
+                            console.error('Error fetching transaction data:', data.message);
+                            // Display error message to user
+                            document.getElementById('chart-container').innerHTML = `
+                                <div class="alert alert-danger">
+                                    Failed to load transaction data: ${data.message}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('chart-container').innerHTML = `
+                            <div class="alert alert-danger">
+                                Failed to load transaction data. Please try again later.
+                            </div>
+                        `;
+                    });
+            }
+
+            // Function to format currency
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'USD',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+
+            // Function to update summary cards with data
+            function updateSummaryCards(summary) {
+                // Format currency
+                const formatter = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 2
+                });
+                
+                // Update card values
+                document.getElementById('total-deposits').textContent = formatter.format(summary.totalDeposits || 0);
+                document.getElementById('total-withdrawals').textContent = formatter.format(summary.totalWithdrawals || 0);
+                document.getElementById('total-profit').textContent = formatter.format(summary.totalProfit || 0);
+                
+                // Update percentage changes with icons
+                updatePercentageDisplay('deposit-percentage', summary.depositPercentage || 0);
+                updatePercentageDisplay('withdrawal-percentage', summary.withdrawalPercentage || 0);
+                updatePercentageDisplay('profit-percentage', summary.profitPercentage || 0);
+            }
+            
+            // Function to update percentage display with appropriate styling
+            function updatePercentageDisplay(elementId, percentage) {
+                const element = document.getElementById(elementId);
+                const valueSpan = element.querySelector('span');
+                const icon = element.querySelector('i');
+                
+                // Format the percentage
+                valueSpan.textContent = `${Math.abs(percentage).toFixed(1)}%`;
+                
+                // Set appropriate class and icon
+                if (percentage > 0) {
+                    element.className = 'percentage-change positive';
+                    icon.className = 'fas fa-arrow-up';
+                } else if (percentage < 0) {
+                    element.className = 'percentage-change negative';
+                    icon.className = 'fas fa-arrow-down';
+                } else {
+                    element.className = 'percentage-change';
+                    icon.className = 'fas fa-minus';
+                }
+            }
+            
+            // Function to update the chart with new data
+            function updateChart(labels, deposits, withdrawals, profits) {
+                const ctx = document.getElementById('financial-chart').getContext('2d');
+                
+                // If chart already exists, destroy it
+                if (window.financialChart) {
+                    window.financialChart.destroy();
+                }
+                
+                // Create new chart
+                window.financialChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Deposits',
+                                backgroundColor: colors.deposits.backgroundColor,
+                                borderColor: colors.deposits.borderColor,
+                                data: deposits,
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointHoverRadius: 6
+                            },
+                            {
+                                label: 'Withdrawals',
+                                backgroundColor: colors.withdrawals.backgroundColor,
+                                borderColor: colors.withdrawals.borderColor,
+                                data: withdrawals,
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointHoverRadius: 6
+                            },
+                            {
+                                label: 'Profit',
+                                backgroundColor: colors.profit.backgroundColor,
+                                borderColor: colors.profit.borderColor,
+                                data: profits,
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2.5,
+                                pointRadius: 3,
+                                pointHoverRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        family: "'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                                        size: 12
+                                    },
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += formatCurrency(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                },
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#333',
+                                bodyColor: '#666',
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    family: "'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    family: "'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                                        size: 11
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatCurrency(value);
+                                    },
+                                    font: {
+                                        family: "'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initialize with 1-year data
+            fetchTransactionData('1Y');
+            
+            // Add event listeners for time period buttons
+            document.querySelectorAll('.time-period-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const period = this.dataset.period;
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.time-period-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    // Fetch data for the selected period
+                    fetchTransactionData(period);
+                });
+            });
+            
+            // Toggle Profile Dropdown
+            document.getElementById('profileDropdown').addEventListener('click', function() {
+                document.getElementById('profileMenu').classList.toggle('hidden');
+            });
+
+            // Handle filters
+            document.querySelectorAll('select, input').forEach(element => {
+                element.addEventListener('change', function() {
+                    // Here you would typically make an API call to filter transactions
+                    console.log('Filter changed:', {
+                        search: document.getElementById('search').value,
+                        type: document.getElementById('type').value,
+                        status: document.getElementById('status').value,
+                        date: document.getElementById('date').value
+                    });
+                });
+            });
+
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+            const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+            const mobileMenuClose = document.getElementById('mobileMenuClose');
+            
+            if (mobileMenuButton && mobileMenuOverlay && mobileMenuPanel) {
+                mobileMenuButton.addEventListener('click', function() {
+                    // If the menu is already visible, close it
+                    if (!mobileMenuOverlay.classList.contains('hidden')) {
+                        closeMobileMenu();
+                    } else {
+                        // Otherwise, open it
+                        mobileMenuOverlay.classList.remove('hidden');
+                        setTimeout(() => {
+                            mobileMenuPanel.classList.add('translate-x-0');
+                            mobileMenuPanel.classList.remove('translate-x-full');
+                        }, 50);
+                    }
+                });
+            }
+            
+            function closeMobileMenu() {
+                if (mobileMenuPanel && mobileMenuOverlay) {
+                    mobileMenuPanel.classList.remove('translate-x-0');
+                    mobileMenuPanel.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        mobileMenuOverlay.classList.add('hidden');
+                    }, 300);
+                }
+            }
+            
+            if (mobileMenuClose) {
+                mobileMenuClose.addEventListener('click', closeMobileMenu);
+            }
+            
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.addEventListener('click', function(event) {
+                    if (event.target === mobileMenuOverlay) {
+                        closeMobileMenu();
+                    }
+                });
+            }
+
+            // Add this to your existing JavaScript to enhance the scroll behavior
+            const scrollContainer = document.querySelector('.chart-scroll-container');
+            
+            // Enable keyboard arrow keys for horizontal scrolling
+            if (scrollContainer) {
+                scrollContainer.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') {
+                        scrollContainer.scrollBy({ left: -100, behavior: 'smooth' });
+                        e.preventDefault();
+                    } else if (e.key === 'ArrowRight') {
+                        scrollContainer.scrollBy({ left: 100, behavior: 'smooth' });
+                        e.preventDefault();
+                    }
+                });
+                
+                // Add tabindex to make the container focusable for keyboard navigation
+                scrollContainer.setAttribute('tabindex', '0');
+            }
+
+            // Debug function to help diagnose chart data issues
+            function debugChartData() {
+                // Get user ID only from URL
+                const urlParts = window.location.pathname.split('/');
+                let userId = null;
+                
+                // Check if we're on a transactions page for a specific user
+                // URL pattern should be /transactions/<user_id>
+                if (urlParts.length > 2 && urlParts[1] === 'transactions' && !isNaN(urlParts[2])) {
+                    userId = urlParts[2];
+                } else {
+                    // For other pages, try to use the user ID from the profile dropdown if available
+                    const profileDropdown = document.getElementById('profileDropdown');
+                    if (profileDropdown && profileDropdown.dataset.userId) {
+                        userId = profileDropdown.dataset.userId;
+                    }
+                }
+                
+                if (!userId) {
+                    console.error('Cannot debug chart data: No user ID found in URL or profile dropdown');
+                    return;
+                }
+                
+                // Fetch debug data
+                fetch(`/api/debug/user-transactions/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Debug data for user', userId, data);
+                        
+                        if (data.success) {
+                            // Log key information
+                            console.log('User has', data.transactions_count, 'transactions');
+                            console.log('Account IDs:', data.account_ids);
+                            console.log('Transaction status counts:', data.status_counts);
+                            console.log('Transaction type counts:', data.type_counts);
+                            
+                            // Check for potential issues
+                            if (data.transactions_count === 0) {
+                                console.error('No transactions found for this user');
+                            }
+                            
+                            const completedCount = data.status_counts.find(s => s.status === 'completed');
+                            if (!completedCount || completedCount.count === 0) {
+                                console.error('No completed transactions found - chart only shows completed transactions');
+                            }
+                        } else {
+                            console.error('Debug API error:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching debug data:', error);
+                    });
+            }
+
+            // Call debug function after a short delay
+            setTimeout(function() {
+                debugChartData();
+            }, 2000);
+
+            // Fetch the latest forex rate
+            function fetchForexRate() {
+                // Create API endpoint for this
+                fetch('/api/forex/latest')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update deposit rate display
+                            const depositRateElements = document.querySelectorAll('.deposit-rate-value');
+                            depositRateElements.forEach(el => {
+                                el.textContent = `${data.deposit_rate.toFixed(2)} KES`;
+                            });
+                            
+                            // Update withdrawal rate display
+                            const withdrawalRateElements = document.querySelectorAll('.withdrawal-rate-value');
+                            withdrawalRateElements.forEach(el => {
+                                el.textContent = `${data.withdrawal_rate.toFixed(2)} KES`;
+                            });
+                            
+                            // For backward compatibility with any existing forex-rate-value elements
+                            const rateElements = document.querySelectorAll('.forex-rate-value');
+                            rateElements.forEach(el => {
+                                el.textContent = `${data.base_rate.toFixed(2)} KES`;
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching forex rate:', error);
+                    });
+            }
+
+            // Fetch forex rate on page load
+            fetchForexRate();
+            
+            // Update forex rates every 5 minutes (300,000 ms)
+            setInterval(fetchForexRate, 300000);
+        });
+    </script>
+    <!-- Authentication script -->
+    <script src="/static/auth.js"></script>
+    
+    <!-- Dark mode script -->
+    <script src="{{ url_for('static', filename='dark-mode.js') }}"></script>
+    
+    <!-- PWA Install Button (hidden by default, shown by JavaScript when installation is available) -->
+    <div class="fixed bottom-4 right-4 hidden" id="pwa-install-button" data-pwa-install>
+        <button class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+            <i class="fas fa-download"></i>
+            <span class="hidden sm:inline">Install App</span>
+        </button>
+    </div>
+
+    <!-- PWA Registration Script -->
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+    <script src="{{ url_for('static', filename='prefetch.js') }}"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html> 

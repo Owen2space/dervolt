@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate PWA Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .description {
+            margin-bottom: 20px;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .icon-placeholder {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #3B82F6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 8px;
+        }
+        canvas {
+            display: none;
+        }
+        button {
+            background-color: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #2563EB;
+        }
+        a {
+            display: inline-block;
+            margin-top: 5px;
+            color: #3B82F6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    
+    <div class="description">
+        <p>This tool helps you generate icons for your Progressive Web App (PWA). Upload your logo image and click "Generate Icons" to create icons in different sizes.</p>
+    </div>
+    
+    <div>
+        <label for="logoUpload">Upload your logo:</label>
+        <input type="file" id="logoUpload" accept="image/*">
+    </div>
+    
+    <div>
+        <label for="bgColor">Background Color:</label>
+        <input type="color" id="bgColor" value="#3B82F6">
+    </div>
+    
+    <button id="generateBtn">Generate Icons</button>
+    
+    <div class="icon-grid" id="iconGrid">
+        <!-- Icon placeholders will be generated here -->
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        const iconSizes = [16, 32, 72, 96, 128, 144, 152, 192, 384, 512];
+        const iconGrid = document.getElementById('iconGrid');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Initialize grid with placeholders
+        function initGrid() {
+            iconGrid.innerHTML = '';
+            
+            iconSizes.forEach(size => {
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                
+                const placeholder = document.createElement('div');
+                placeholder.className = 'icon-placeholder';
+                placeholder.id = `placeholder-${size}`;
+                placeholder.textContent = `${size}x${size}`;
+                
+                const sizeText = document.createElement('div');
+                sizeText.textContent = `${size}x${size}`;
+                
+                iconItem.appendChild(placeholder);
+                iconItem.appendChild(sizeText);
+                
+                iconGrid.appendChild(iconItem);
+            });
+        }
+        
+        // Generate icons when button is clicked
+        document.getElementById('generateBtn').addEventListener('click', generateIcons);
+        
+        function generateIcons() {
+            const fileInput = document.getElementById('logoUpload');
+            const bgColor = document.getElementById('bgColor').value;
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please upload an image file');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const img = new Image();
+                
+                img.onload = function() {
+                    iconSizes.forEach(size => {
+                        createIcon(img, size, bgColor);
+                    });
+                };
+                
+                img.src = e.target.result;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        function createIcon(img, size, bgColor) {
+            // Set canvas size
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Clear canvas and draw background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Calculate sizing to fit the logo with padding
+            const padding = size * 0.15; // 15% padding
+            const logoSize = size - (padding * 2);
+            
+            // Draw the image
+            ctx.drawImage(img, padding, padding, logoSize, logoSize);
+            
+            // Get data URL
+            const dataURL = canvas.toDataURL('image/png');
+            
+            // Update placeholder with the generated icon
+            const placeholder = document.getElementById(`placeholder-${size}`);
+            placeholder.innerHTML = '';
+            
+            const iconImg = document.createElement('img');
+            iconImg.src = dataURL;
+            iconImg.style.width = '100%';
+            iconImg.style.borderRadius = '12px';
+            placeholder.appendChild(iconImg);
+            
+            // Add download link
+            const parent = placeholder.parentNode;
+            
+            // Remove existing link if present
+            const existingLink = parent.querySelector('a');
+            if (existingLink) {
+                parent.removeChild(existingLink);
+            }
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = dataURL;
+            downloadLink.download = `icon-${size}x${size}.png`;
+            downloadLink.textContent = 'Download';
+            parent.appendChild(downloadLink);
+        }
+        
+        // Initialize the grid on page load
+        initGrid();
+    </script>
+</body>
+</html> 

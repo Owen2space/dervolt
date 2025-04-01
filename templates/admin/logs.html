@@ -1,0 +1,312 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}{{ title|default('Admin Logs') }}{% endblock %}
+
+{% block page_title %}{{ title|default('Admin Logs') }}{% endblock %}
+{% block page_subtitle %}Monitor and review all system logs{% endblock %}
+
+{% block content %}
+<!-- Filter Controls -->
+<div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <form action="{{ url_for('admin_logs') }}" method="GET" class="space-y-4">
+        <input type="hidden" name="type" value="{{ log_type }}">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Admin Filter -->
+            {% if log_type != 'error' and log_type != 'security' %}
+            <div>
+                <label for="admin_id" class="block text-sm font-medium text-gray-700 mb-1">Admin</label>
+                <select id="admin_id" name="admin_id" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">All Admins</option>
+                    {% for admin_option in admins %}
+                    <option value="{{ admin_option.id }}" {% if admin_id|int == admin_option.id %}selected{% endif %}>
+                        {{ admin_option.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <!-- Action Filter -->
+            <div>
+                <label for="action" class="block text-sm font-medium text-gray-700 mb-1">
+                    {% if log_type == 'error' %}Error Type
+                    {% elif log_type == 'security' %}Event Type
+                    {% else %}Action
+                    {% endif %}
+                </label>
+                <select id="action" name="action" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">All Actions</option>
+                    {% if log_type == 'error' %}
+                    <option value="database_error" {% if action == 'database_error' %}selected{% endif %}>Database Error</option>
+                    <option value="api_error" {% if action == 'api_error' %}selected{% endif %}>API Error</option>
+                    <option value="authentication_error" {% if action == 'authentication_error' %}selected{% endif %}>Authentication Error</option>
+                    <option value="validation_error" {% if action == 'validation_error' %}selected{% endif %}>Validation Error</option>
+                    <option value="system_error" {% if action == 'system_error' %}selected{% endif %}>System Error</option>
+                    {% elif log_type == 'security' %}
+                    <option value="login_attempt" {% if action == 'login_attempt' %}selected{% endif %}>Login Attempt</option>
+                    <option value="failed_login" {% if action == 'failed_login' %}selected{% endif %}>Failed Login</option>
+                    <option value="session_expired" {% if action == 'session_expired' %}selected{% endif %}>Session Expired</option>
+                    <option value="suspicious_activity" {% if action == 'suspicious_activity' %}selected{% endif %}>Suspicious Activity</option>
+                    <option value="password_reset" {% if action == 'password_reset' %}selected{% endif %}>Password Reset</option>
+                    {% else %}
+                    <option value="login" {% if action == 'login' %}selected{% endif %}>Login</option>
+                    <option value="logout" {% if action == 'logout' %}selected{% endif %}>Logout</option>
+                    <option value="view_users" {% if action == 'view_users' %}selected{% endif %}>View Users</option>
+                    <option value="view_user_detail" {% if action == 'view_user_detail' %}selected{% endif %}>View User Detail</option>
+                    <option value="view_transactions" {% if action == 'view_transactions' %}selected{% endif %}>View Transactions</option>
+                    <option value="transaction_action" {% if action == 'transaction_action' %}selected{% endif %}>Transaction Action</option>
+                    <option value="user_update" {% if action == 'user_update' %}selected{% endif %}>User Update</option>
+                    <option value="view_settings" {% if action == 'view_settings' %}selected{% endif %}>View Settings</option>
+                    <option value="settings_update" {% if action == 'settings_update' %}selected{% endif %}>Settings Update</option>
+                    <option value="admin_add" {% if action == 'admin_add' %}selected{% endif %}>Admin Added</option>
+                    {% endif %}
+                </select>
+            </div>
+            
+            <!-- Date Range -->
+            <div>
+                <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                        <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="block w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="From">
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                        <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="block w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="To">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+            <div>
+                {% if admin_id or action or date_from or date_to %}
+                <a href="{{ url_for('admin_logs') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-times mr-2"></i>
+                    Clear Filters
+                </a>
+                {% endif %}
+            </div>
+            <div>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-filter mr-2"></i>
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Admin Logs Table -->
+<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-lg font-semibold text-gray-900">{{ title|default('Admin Activity Logs') }} ({{ total_logs }})</h2>
+        
+        <button type="button" onclick="exportLogs()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <i class="fas fa-file-export mr-2"></i>
+            Export
+        </button>
+    </div>
+    
+    {% if logs %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {% if log_type == 'error' or log_type == 'security' %}User ID{% else %}Admin{% endif %}
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {% if log_type == 'error' %}Error Type{% elif log_type == 'security' %}Event Type{% else %}Action{% endif %}
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                    {% if log_type != 'error' and log_type != 'security' %}
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                    {% else %}
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                    {% endif %}
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for log in logs %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            {% if log_type == 'error' or log_type == 'security' %}
+                            <div class="text-sm font-medium text-gray-900">{{ log.admin_id|default('System') }}</div>
+                            {% else %}
+                            <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                                {{ log.username[0]|upper if log.username else 'S' }}
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">{{ log.username|default('System') }}</div>
+                                <div class="text-xs text-gray-500">{{ log.role|default('') }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full 
+                            {% if log.action == 'login' or log.action == 'logout' %}
+                                bg-blue-100 text-blue-800
+                            {% elif 'error' in log.action or 'failed' in log.action %}
+                                bg-red-100 text-red-800
+                            {% elif 'approve' in log.action %}
+                                bg-green-100 text-green-800
+                            {% elif 'reject' in log.action %}
+                                bg-red-100 text-red-800
+                            {% else %}
+                                bg-gray-100 text-gray-800
+                            {% endif %}">
+                            {{ log.action|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">{{ log.details or 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if log_type != 'error' and log_type != 'security' %}
+                        <div class="text-sm text-gray-900">{{ log.ip_address }}</div>
+                        <div class="text-xs text-gray-500">{{ log.user_agent|truncate(30) if log.user_agent else '' }}</div>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-medium rounded-full 
+                            {% if log.severity == 'high' %}
+                                bg-red-100 text-red-800
+                            {% elif log.severity == 'medium' %}
+                                bg-yellow-100 text-yellow-800
+                            {% else %}
+                                bg-blue-100 text-blue-800
+                            {% endif %}">
+                            {{ log.severity|default('low')|title }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ log.created_at }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if page > 1 %}
+            <a href="{{ url_for('admin_logs', page=page-1, admin_id=admin_id, action=action, date_from=date_from, date_to=date_to, type=log_type) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+            </a>
+            {% else %}
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-50 cursor-not-allowed">
+                Previous
+            </span>
+            {% endif %}
+            
+            {% if page < total_pages %}
+            <a href="{{ url_for('admin_logs', page=page+1, admin_id=admin_id, action=action, date_from=date_from, date_to=date_to, type=log_type) }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+            </a>
+            {% else %}
+            <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-50 cursor-not-allowed">
+                Next
+            </span>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing 
+                    <span class="font-medium">{{ (page - 1) * 20 + 1 }}</span>
+                    to 
+                    <span class="font-medium">{{ [page * 20, total_logs]|min }}</span>
+                    of 
+                    <span class="font-medium">{{ total_logs }}</span>
+                    results
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <!-- Previous Page -->
+                    {% if page > 1 %}
+                    <a href="{{ url_for('admin_logs', page=page-1, admin_id=admin_id, action=action, date_from=date_from, date_to=date_to, type=log_type) }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% else %}
+                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400">
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
+                    {% endif %}
+                    
+                    <!-- Page Numbers -->
+                    {% set start_page = [1, page - 2]|max %}
+                    {% set end_page = [start_page + 4, total_pages]|min %}
+                    {% set end_page = [end_page, 5]|max %}
+                    {% set start_page = [end_page - 4, 1]|max %}
+                    
+                    {% for p in range(start_page, end_page + 1) %}
+                    <a href="{{ url_for('admin_logs', page=p, admin_id=admin_id, action=action, date_from=date_from, date_to=date_to, type=log_type) }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 
+                            {% if p == page %}bg-indigo-100 text-indigo-600 font-semibold{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %}
+                            text-sm font-medium">
+                        {{ p }}
+                    </a>
+                    {% endfor %}
+                    
+                    <!-- Next Page -->
+                    {% if page < total_pages %}
+                    <a href="{{ url_for('admin_logs', page=page+1, admin_id=admin_id, action=action, date_from=date_from, date_to=date_to, type=log_type) }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="py-12 px-6 text-center">
+        <div class="p-6 rounded-full bg-gray-100 inline-flex items-center justify-center">
+            <i class="fas fa-history text-gray-400 text-3xl"></i>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No logs found</h3>
+        <p class="mt-1 text-gray-500">
+            {% if admin_id or action or date_from or date_to %}
+            Try adjusting your filter criteria.
+            <a href="{{ url_for('admin_logs') }}" class="text-indigo-600 hover:text-indigo-900">Clear filters</a>
+            {% else %}
+            No admin activities have been logged yet.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Export logs to CSV
+    function exportLogs() {
+        // Get current filter parameters
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        // Add export parameter
+        searchParams.set('export', 'csv');
+        
+        // Create export URL
+        const exportUrl = `${window.location.pathname}?${searchParams.toString()}`;
+        
+        // Open in new tab
+        window.open(exportUrl, '_blank');
+    }
+</script>
+{% endblock %} 

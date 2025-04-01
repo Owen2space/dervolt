@@ -1,0 +1,167 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Admin System Settings{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+{% block subtitle %}Monitor System Performance and Logs{% endblock %}
+
+{% block head_extras %}
+<style>
+.table-scroll {
+    max-height: 350px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- System Overview Cards -->
+<div class="row">
+    <!-- Daily Active Users Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Daily Active Users</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_metrics.daily_active_users }}</div>
+                        <div class="text-xs font-weight-bold {{ 'text-success' if user_metrics.daily_growth >= 0 else 'text-danger' }} mt-1">
+                            <i class="fas {{ 'fa-arrow-up' if user_metrics.daily_growth >= 0 else 'fa-arrow-down' }}"></i>
+                            {{ user_metrics.daily_growth|abs }}% from yesterday
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Average Users Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Weekly Avg. Users</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_metrics.weekly_avg_users }}</div>
+                        <div class="text-xs font-weight-bold {{ 'text-success' if user_metrics.weekly_avg_growth >= 0 else 'text-danger' }} mt-1">
+                            <i class="fas {{ 'fa-arrow-up' if user_metrics.weekly_avg_growth >= 0 else 'fa-arrow-down' }}"></i>
+                            {{ user_metrics.weekly_avg_growth|abs }}% from last week
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Retention Rate Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">User Retention</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_metrics.retention_rate }}%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Logs -->
+<div class="row">
+    <div class="col-xl-12 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Error Logs</h6>
+                <a href="{{ url_for('admin_logs') }}?type=error" class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-scroll">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Error Type</th>
+                                <th>Message</th>
+                                <th>Severity</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in error_logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td>{{ log.error_type }}</td>
+                                <td>{{ log.message }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'danger' if log.severity == 'high' else ('warning' if log.severity == 'medium' else 'info') }}">
+                                        {{ log.severity }}
+                                    </span>
+                                </td>
+                                <td>{{ log.user_id if log.user_id else 'System' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Logs -->
+<div class="row">
+    <div class="col-xl-12 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Security Logs</h6>
+                <a href="{{ url_for('admin_logs') }}?type=security" class="btn btn-sm btn-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-scroll">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event Type</th>
+                                <th>Description</th>
+                                <th>Threat Level</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in security_logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td>{{ log.event_type }}</td>
+                                <td>{{ log.description }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'danger' if log.threat_level == 'high' else ('warning' if log.threat_level == 'medium' else 'info') }}">
+                                        {{ log.threat_level }}
+                                    </span>
+                                </td>
+                                <td>{{ log.user_id if log.user_id else 'System' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

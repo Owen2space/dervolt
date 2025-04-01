@@ -1,0 +1,264 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block page_subtitle %}Monitor key metrics and recent activity{% endblock %}
+
+{% block content %}
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <!-- Stat Card 1: Total Users -->
+        <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                        <i class="fas fa-users text-indigo-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                            <dd>
+                                <div class="text-lg font-medium text-gray-900">{{ total_users }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                {% if user_growth is defined %}
+                <div class="mt-4">
+                    <span class="text-sm {% if user_growth > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        <i class="fas {% if user_growth > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                        {{ user_growth }}% from last month
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-gray-50 px-4 py-4 sm:px-6">
+                <div class="text-sm">
+                    <a href="{{ url_for('admin_users') }}" class="font-medium text-indigo-600 hover:text-indigo-500 flex items-center">
+                        View all users
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Card 2: Total Transactions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                        <i class="fas fa-exchange-alt text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Transactions</dt>
+                            <dd>
+                                <div class="text-lg font-medium text-gray-900">{{ total_transactions }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                {% if transaction_count is defined %}
+                <div class="mt-4">
+                    <span class="text-sm text-gray-600">
+                        <i class="fas fa-calendar-day mr-1"></i>
+                        {{ transaction_count }} today
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="bg-gray-50 px-4 py-4 sm:px-6">
+                <div class="text-sm">
+                    <a href="{{ url_for('admin_transactions') }}" class="font-medium text-indigo-600 hover:text-indigo-500 flex items-center">
+                        View all transactions
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Card 3: Revenue -->
+        <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                        <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                            <dd>
+                                <div class="text-lg font-medium text-gray-900">${{ revenue|default(total_revenue, '') }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-sm text-gray-600">
+                        <i class="fas fa-calendar-alt mr-1"></i>
+                        Current month
+                    </span>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-4 sm:px-6">
+                <div class="text-sm">
+                    <a href="{{ url_for('admin_transactions') }}" class="font-medium text-indigo-600 hover:text-indigo-500 flex items-center">
+                        View details
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Metrics Card -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg mb-8">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                        <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5">
+                        <h3 class="text-lg font-medium text-gray-900">System Metrics</h3>
+                        <p class="text-sm text-gray-500 mt-1">Comprehensive platform analytics and financial metrics</p>
+                    </div>
+                </div>
+                <div class="hidden sm:flex space-x-4 text-sm">
+                    <div class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full">
+                        <span>{{ total_deposits|default('$0') }}</span>
+                        <span class="text-xs">Total Deposits</span>
+                    </div>
+                    <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                        <span>{{ transaction_volume|default('0') }}</span>
+                        <span class="text-xs">Transactions</span>
+                    </div>
+                    <div class="bg-green-50 text-green-700 px-3 py-1 rounded-full">
+                        <span>{{ new_users_rate|default('0%') }}</span>
+                        <span class="text-xs">Growth Rate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-4 sm:px-6">
+            <div class="text-sm">
+                <a href="{{ url_for('admin_system_metrics') }}" class="font-medium text-indigo-600 hover:text-indigo-500 flex items-center">
+                    View detailed metrics
+                    <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row of Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 mb-8">
+        <!-- Active Users Card -->
+        <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Active Users</h3>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Last 24h</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="text-3xl font-bold text-gray-900">{{ active_users|default(0) }}</div>
+                    {% if active_users_growth is defined %}
+                    <div class="ml-3 flex items-center text-sm {% if active_users_growth > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        <i class="fas {% if active_users_growth > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                        {{ active_users_growth }}%
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health Card -->
+        <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">System Health</h3>
+                    <a href="{{ url_for('admin_system_health') }}" class="text-sm text-indigo-600 hover:text-indigo-500">Details</a>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">CPU Usage</span>
+                        <div class="flex items-center mt-1">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="--width: {{ system_health.cpu_usage|default(25) }}%; width: var(--width);"></div>
+                            </div>
+                            <span class="ml-2 text-sm text-gray-700">{{ system_health.cpu_usage|default(25) }}%</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-500">Memory Usage</span>
+                        <div class="flex items-center mt-1">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-600 h-2.5 rounded-full" style="--width: {{ system_health.memory_usage|default(40) }}%; width: var(--width);"></div>
+                            </div>
+                            <span class="ml-2 text-sm text-gray-700">{{ system_health.memory_usage|default(40) }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Activity</h3>
+            <a href="{{ url_for('admin_logs') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                View all logs
+            </a>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% if activity_logs %}
+                {% for log in activity_logs %}
+                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-gray-100 rounded-full p-2">
+                            <i class="fas fa-history text-gray-500"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">
+                                Admin <span class="font-semibold">{{ log.admin_name }}</span> {{ log.action }}
+                            </p>
+                            <p class="text-sm text-gray-500 flex items-center">
+                                <i class="far fa-clock mr-1"></i>
+                                {{ log.timestamp }}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ log.status_color }}-100 text-{{ log.status_color }}-800">
+                                {{ log.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="px-4 py-5 sm:px-6 text-center text-gray-500">
+                    <p>No recent activity found</p>
+                    <button class="mt-2 inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-sync-alt mr-1.5"></i>
+                        Refresh
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any dashboard-specific JavaScript here
+        const refreshButton = document.querySelector('button:has(.fa-sync-alt)');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                window.location.reload();
+            });
+        }
+    });
+</script>
+{% endblock %} 

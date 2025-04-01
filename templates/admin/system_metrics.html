@@ -1,0 +1,322 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}System Metrics{% endblock %}
+
+{% block head_extras %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block page_title %}System Metrics{% endblock %}
+{% block page_subtitle %}Comprehensive platform analytics and financial insights{% endblock %}
+
+{% block content %}
+<!-- Overview Metrics Cards -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8">
+    <!-- Total Deposits -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                    <i class="fas fa-arrow-down text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Deposits</dt>
+                        <dd class="text-lg font-semibold text-gray-900">${{ total_deposits|default('0')|round(2) }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Sum of all user deposits over time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Withdrawals -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                    <i class="fas fa-arrow-up text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Withdrawals</dt>
+                        <dd class="text-lg font-semibold text-gray-900">${{ total_withdrawals|default('0')|round(2) }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Sum of all user withdrawals</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Net Profit -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Net Profit</dt>
+                        <dd class="text-lg font-semibold text-gray-900">${{ net_profit|default('0')|round(2) }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Platform's earnings after withdrawals and fees</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Der-Volt Account Balance -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-emerald-100 rounded-md p-3">
+                    <i class="fas fa-wallet text-emerald-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Der-Volt Account Balance</dt>
+                        <dd class="text-lg font-semibold text-gray-900">${{ total_platform_balance|default('0')|round(2) }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Total funds held across all user accounts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Rate -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                    <i class="fas fa-chart-line text-indigo-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Growth Rate</dt>
+                        <dd class="text-lg font-semibold text-gray-900">{{ growth_rate|default('0') }}%</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">New users vs total users (last 30 days)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row of Metrics -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mb-8">
+    <!-- Active Users -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                    <i class="fas fa-users text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Active Users</dt>
+                        <dd class="text-lg font-semibold text-gray-900">{{ active_transacting_users|default('0') }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Users with transactions in the last 30 days</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Volume -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-pink-100 rounded-md p-3">
+                    <i class="fas fa-exchange-alt text-pink-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Transaction Volume</dt>
+                        <dd class="text-lg font-semibold text-gray-900">{{ weekly_transaction_volume|default('0') }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">{{ daily_transaction_volume|default('0') }} today / {{ weekly_transaction_volume|default('0') }} this week</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fraud Alerts -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                    <i class="fas fa-shield-alt text-red-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Fraud Alerts</dt>
+                        <dd class="text-lg font-semibold text-gray-900">{{ fraud_alerts|default('0') }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Suspicious transactions flagged for review</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Requests -->
+    <div class="bg-white overflow-hidden shadow rounded-lg transition-all duration-200 hover:shadow-lg">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-teal-100 rounded-md p-3">
+                    <i class="fas fa-headset text-teal-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Support Requests</dt>
+                        <dd class="text-lg font-semibold text-gray-900">{{ support_requests|default('0') }}</dd>
+                    </dl>
+                    <p class="text-xs text-gray-500 mt-1">Open issues and support tickets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Transaction Volume Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Transaction Volume Trend</h3>
+        <div class="h-80">
+            <canvas id="transactionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Deposits vs Withdrawals Chart -->
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Deposits vs Withdrawals</h3>
+        <div class="h-80">
+            <canvas id="financeChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Most Used Payment Methods -->
+<div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-5 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Most Used Payment Methods</h3>
+    </div>
+    
+    <div class="p-6">
+        {% if payment_methods and payment_methods|length > 0 %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {% for method in payment_methods %}
+            <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <div class="text-lg font-semibold mb-1">{{ method.payment_method }}</div>
+                <div class="text-sm text-gray-500">{{ method.count }} transactions</div>
+                <div class="mt-2 h-1 bg-gray-200 rounded-full">
+                    <div class="bg-indigo-500 h-1 rounded-full" style="width: {{ (method.count / payment_methods[0].count * 100)|round|int }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-6 text-gray-500">
+            <i class="fas fa-info-circle mr-2"></i> No payment method data available
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Transaction Volume Chart
+        const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
+            type: 'line',
+            data: {
+                labels: {{ months|tojson }},
+                datasets: [{
+                    label: 'Transaction Count',
+                    data: {{ transaction_counts|tojson }},
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderColor: 'rgba(79, 70, 229, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+
+        // Finance Chart (Deposits vs Withdrawals)
+        const financeCtx = document.getElementById('financeChart').getContext('2d');
+        const financeChart = new Chart(financeCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ months|tojson }},
+                datasets: [
+                    {
+                        label: 'Deposits',
+                        data: {{ deposit_data|tojson }},
+                        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Withdrawals',
+                        data: {{ withdrawal_data|tojson }},
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

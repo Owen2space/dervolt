@@ -1,0 +1,468 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+{% block page_subtitle %}Configure application-wide settings and parameters{% endblock %}
+
+{% block content %}
+<!-- Settings Sections -->
+<div class="space-y-6">
+    <!-- General Settings -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">General Settings</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ url_for('admin_update_settings') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="section" value="general">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Site Name -->
+                    <div>
+                        <label for="site_name" class="block text-sm font-medium text-gray-700 mb-1">Site Name</label>
+                        <input type="text" id="site_name" name="site_name" value="{{ settings.get('site_name', 'Deriv Money App') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Name displayed in the title and header areas</p>
+                    </div>
+                    
+                    <!-- Contact Email -->
+                    <div>
+                        <label for="contact_email" class="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+                        <input type="email" id="contact_email" name="contact_email" value="{{ settings.get('contact_email', 'support@example.com') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Primary email for support and user contact</p>
+                    </div>
+                    
+                    <!-- Currency Symbol -->
+                    <div>
+                        <label for="currency_symbol" class="block text-sm font-medium text-gray-700 mb-1">Currency Symbol</label>
+                        <input type="text" id="currency_symbol" name="currency_symbol" value="{{ settings.get('currency_symbol', '$') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Symbol used throughout the application</p>
+                    </div>
+                    
+                    <!-- Maintenance Mode -->
+                    <div>
+                        <label for="maintenance_mode" class="block text-sm font-medium text-gray-700 mb-1">Maintenance Mode</label>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                            <input type="checkbox" id="maintenance_mode" name="maintenance_mode" value="1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" 
+                                {% if settings.get('maintenance_mode') == '1' %}checked{% endif %}>
+                            <label for="maintenance_mode" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                        <label for="maintenance_mode" class="text-xs text-gray-700">Enable maintenance mode</label>
+                        <p class="mt-1 text-xs text-gray-500">When enabled, the site will display a maintenance message</p>
+                    </div>
+                    
+                    <!-- Maintenance Message -->
+                    <div class="md:col-span-2">
+                        <label for="maintenance_message" class="block text-sm font-medium text-gray-700 mb-1">Maintenance Message</label>
+                        <textarea id="maintenance_message" name="maintenance_message" rows="3" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ settings.get('maintenance_message', 'We are currently performing scheduled maintenance. Please check back later.') }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Message to display when the site is in maintenance mode</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save General Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Payment Settings -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">Payment Settings</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ url_for('admin_update_settings') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="section" value="payment">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Minimum Deposit -->
+                    <div>
+                        <label for="min_deposit" class="block text-sm font-medium text-gray-700 mb-1">Minimum Deposit Amount</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">{{ settings.get('currency_symbol', '$') }}</span>
+                            </div>
+                            <input type="number" id="min_deposit" name="min_deposit" value="{{ settings.get('min_deposit', '10') }}" min="0" step="0.01" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Minimum amount a user can deposit</p>
+                    </div>
+                    
+                    <!-- Minimum Withdrawal -->
+                    <div>
+                        <label for="min_withdrawal" class="block text-sm font-medium text-gray-700 mb-1">Minimum Withdrawal Amount</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">{{ settings.get('currency_symbol', '$') }}</span>
+                            </div>
+                            <input type="number" id="min_withdrawal" name="min_withdrawal" value="{{ settings.get('min_withdrawal', '10') }}" min="0" step="0.01" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Minimum amount a user can withdraw</p>
+                    </div>
+                    
+                    <!-- Maximum Deposit -->
+                    <div>
+                        <label for="max_deposit" class="block text-sm font-medium text-gray-700 mb-1">Maximum Deposit Amount</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">{{ settings.get('currency_symbol', '$') }}</span>
+                            </div>
+                            <input type="number" id="max_deposit" name="max_deposit" value="{{ settings.get('max_deposit', '5000') }}" min="0" step="0.01" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Maximum amount a user can deposit at once</p>
+                    </div>
+                    
+                    <!-- Maximum Withdrawal -->
+                    <div>
+                        <label for="max_withdrawal" class="block text-sm font-medium text-gray-700 mb-1">Maximum Withdrawal Amount</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">{{ settings.get('currency_symbol', '$') }}</span>
+                            </div>
+                            <input type="number" id="max_withdrawal" name="max_withdrawal" value="{{ settings.get('max_withdrawal', '5000') }}" min="0" step="0.01" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Maximum amount a user can withdraw at once</p>
+                    </div>
+                    
+                    <!-- Enabled Payment Methods -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Enabled Payment Methods</label>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="mpesa_enabled" name="mpesa_enabled" type="checkbox" value="1" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        {% if settings.get('mpesa_enabled', '1') == '1' %}checked{% endif %}>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="mpesa_enabled" class="font-medium text-gray-700">M-Pesa</label>
+                                    <p class="text-gray-500">Enable M-Pesa payment method for users</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="bank_enabled" name="bank_enabled" type="checkbox" value="1" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        {% if settings.get('bank_enabled', '1') == '1' %}checked{% endif %}>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="bank_enabled" class="font-medium text-gray-700">Bank Account</label>
+                                    <p class="text-gray-500">Enable Bank Account payment method for users</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input id="card_enabled" name="card_enabled" type="checkbox" value="1" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        {% if settings.get('card_enabled', '1') == '1' %}checked{% endif %}>
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="card_enabled" class="font-medium text-gray-700">Card Payment</label>
+                                    <p class="text-gray-500">Enable Card Payment method for users</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Default Payment Method -->
+                    <div>
+                        <label for="default_payment_method" class="block text-sm font-medium text-gray-700 mb-1">Default Payment Method</label>
+                        <select id="default_payment_method" name="default_payment_method" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="M-Pesa" {% if settings.get('default_payment_method') == 'M-Pesa' %}selected{% endif %}>M-Pesa</option>
+                            <option value="Bank Account" {% if settings.get('default_payment_method') == 'Bank Account' %}selected{% endif %}>Bank Account</option>
+                            <option value="Card Payment" {% if settings.get('default_payment_method') == 'Card Payment' %}selected{% endif %}>Card Payment</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Default payment method for new users</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Payment Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Security Settings -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">Security Settings</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ url_for('admin_update_settings') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="section" value="security">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Password Reset Expiry -->
+                    <div>
+                        <label for="password_reset_expiry" class="block text-sm font-medium text-gray-700 mb-1">Password Reset OTP Expiry (minutes)</label>
+                        <input type="number" id="password_reset_expiry" name="password_reset_expiry" value="{{ settings.get('password_reset_expiry', '15') }}" min="1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Time in minutes before a password reset OTP expires</p>
+                    </div>
+                    
+                    <!-- Max Login Attempts -->
+                    <div>
+                        <label for="max_login_attempts" class="block text-sm font-medium text-gray-700 mb-1">Maximum Login Attempts</label>
+                        <input type="number" id="max_login_attempts" name="max_login_attempts" value="{{ settings.get('max_login_attempts', '5') }}" min="1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Number of unsuccessful attempts before temporary lockout</p>
+                    </div>
+                    
+                    <!-- Lockout Duration -->
+                    <div>
+                        <label for="lockout_duration" class="block text-sm font-medium text-gray-700 mb-1">Account Lockout Duration (minutes)</label>
+                        <input type="number" id="lockout_duration" name="lockout_duration" value="{{ settings.get('lockout_duration', '30') }}" min="1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Duration in minutes that an account remains locked after too many failed attempts</p>
+                    </div>
+                    
+                    <!-- Session Timeout -->
+                    <div>
+                        <label for="session_timeout" class="block text-sm font-medium text-gray-700 mb-1">Session Timeout (minutes)</label>
+                        <input type="number" id="session_timeout" name="session_timeout" value="{{ settings.get('session_timeout', '30') }}" min="1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        <p class="mt-1 text-xs text-gray-500">Time in minutes before an inactive session expires</p>
+                    </div>
+                    
+                    <!-- Require OTP for Password Change -->
+                    <div>
+                        <label for="require_otp_password_change" class="block text-sm font-medium text-gray-700 mb-1">Require OTP for Password Change</label>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                            <input type="checkbox" id="require_otp_password_change" name="require_otp_password_change" value="1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" 
+                                {% if settings.get('require_otp_password_change', '1') == '1' %}checked{% endif %}>
+                            <label for="require_otp_password_change" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                        <label for="require_otp_password_change" class="text-xs text-gray-700">Enable OTP verification</label>
+                        <p class="mt-1 text-xs text-gray-500">When enabled, users must verify via OTP when changing passwords</p>
+                    </div>
+                    
+                    <!-- Require OTP for Large Withdrawals -->
+                    <div>
+                        <label for="require_otp_large_withdrawal" class="block text-sm font-medium text-gray-700 mb-1">Require OTP for Large Withdrawals</label>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                            <input type="checkbox" id="require_otp_large_withdrawal" name="require_otp_large_withdrawal" value="1" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" 
+                                {% if settings.get('require_otp_large_withdrawal', '1') == '1' %}checked{% endif %}>
+                            <label for="require_otp_large_withdrawal" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                        <label for="require_otp_large_withdrawal" class="text-xs text-gray-700">Enable OTP for large withdrawals</label>
+                        <p class="mt-1 text-xs text-gray-500">When enabled, users must verify via OTP for withdrawals above the threshold</p>
+                    </div>
+                    
+                    <!-- Large Withdrawal Threshold -->
+                    <div>
+                        <label for="large_withdrawal_threshold" class="block text-sm font-medium text-gray-700 mb-1">Large Withdrawal Threshold</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">{{ settings.get('currency_symbol', '$') }}</span>
+                            </div>
+                            <input type="number" id="large_withdrawal_threshold" name="large_withdrawal_threshold" value="{{ settings.get('large_withdrawal_threshold', '1000') }}" min="0" step="0.01" class="block w-full pl-7 pr-12 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Amount above which OTP verification is required for withdrawals</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Security Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- API Settings -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">API Settings</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ url_for('admin_update_settings') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="section" value="api">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- M-Pesa API Key -->
+                    <div>
+                        <label for="mpesa_api_key" class="block text-sm font-medium text-gray-700 mb-1">M-Pesa API Key</label>
+                        <input type="text" id="mpesa_api_key" name="mpesa_api_key" value="{{ settings.get('mpesa_api_key', '') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">API key for M-Pesa integration</p>
+                    </div>
+                    
+                    <!-- M-Pesa API Secret -->
+                    <div>
+                        <label for="mpesa_api_secret" class="block text-sm font-medium text-gray-700 mb-1">M-Pesa API Secret</label>
+                        <input type="password" id="mpesa_api_secret" name="mpesa_api_secret" value="{{ settings.get('mpesa_api_secret', '') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">API secret for M-Pesa integration</p>
+                    </div>
+                    
+                    <!-- SMTP Server -->
+                    <div>
+                        <label for="smtp_server" class="block text-sm font-medium text-gray-700 mb-1">SMTP Server</label>
+                        <input type="text" id="smtp_server" name="smtp_server" value="{{ settings.get('smtp_server', 'smtp.example.com') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">SMTP server for sending emails</p>
+                    </div>
+                    
+                    <!-- SMTP Port -->
+                    <div>
+                        <label for="smtp_port" class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
+                        <input type="number" id="smtp_port" name="smtp_port" value="{{ settings.get('smtp_port', '587') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Port for SMTP server</p>
+                    </div>
+                    
+                    <!-- SMTP Username -->
+                    <div>
+                        <label for="smtp_username" class="block text-sm font-medium text-gray-700 mb-1">SMTP Username</label>
+                        <input type="text" id="smtp_username" name="smtp_username" value="{{ settings.get('smtp_username', '') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Username for SMTP authentication</p>
+                    </div>
+                    
+                    <!-- SMTP Password -->
+                    <div>
+                        <label for="smtp_password" class="block text-sm font-medium text-gray-700 mb-1">SMTP Password</label>
+                        <input type="password" id="smtp_password" name="smtp_password" value="{{ settings.get('smtp_password', '') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Password for SMTP authentication</p>
+                    </div>
+                    
+                    <!-- Email From Address -->
+                    <div>
+                        <label for="email_from" class="block text-sm font-medium text-gray-700 mb-1">Email From Address</label>
+                        <input type="email" id="email_from" name="email_from" value="{{ settings.get('email_from', 'noreply@example.com') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Email address used in the From field</p>
+                    </div>
+                    
+                    <!-- Email From Name -->
+                    <div>
+                        <label for="email_from_name" class="block text-sm font-medium text-gray-700 mb-1">Email From Name</label>
+                        <input type="text" id="email_from_name" name="email_from_name" value="{{ settings.get('email_from_name', 'Deriv Money App') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Name used in the From field</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save API Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Forex Settings -->
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900">Forex Settings</h2>
+        </div>
+        <div class="p-6">
+            <form action="{{ url_for('admin_update_settings') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="section" value="forex">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- APILayer.com API Key -->
+                    <div class="md:col-span-2">
+                        <label for="apilayer_api_key" class="block text-sm font-medium text-gray-700 mb-1">APILayer.com API Key</label>
+                        <div class="relative">
+                            <input type="text" id="apilayer_api_key" name="apilayer_api_key" value="{{ settings.get('apilayer_api_key', 'OINCnb11BaevDpWgZQ7iNw85IajuFnNW') }}" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <p class="mt-1 text-xs text-gray-500">API key for apilayer.com Currency Data API. Get your key at <a href="https://apilayer.com/account" target="_blank" class="text-blue-600 hover:underline">https://apilayer.com/account</a></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Rate Spreads -->
+                    <div>
+                        <label for="deposit_rate_spread" class="block text-sm font-medium text-gray-700 mb-1">Deposit Rate Spread (%)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" id="deposit_rate_spread" name="deposit_rate_spread" value="{{ settings.get('deposit_rate_spread', '102.6') }}" min="100" step="0.1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Percentage of base rate used for deposits. This is the rate displayed to users before fees are applied.</p>
+                    </div>
+                    
+                    <div>
+                        <label for="withdrawal_rate_spread" class="block text-sm font-medium text-gray-700 mb-1">Withdrawal Rate Spread (%)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" id="withdrawal_rate_spread" name="withdrawal_rate_spread" value="{{ settings.get('withdrawal_rate_spread', '97.5') }}" min="90" max="100" step="0.1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Percentage of base rate used for withdrawals. This is the rate displayed to users before fees are applied.</p>
+                    </div>
+                    
+                    <!-- Fee Settings -->
+                    <div>
+                        <label for="deposit_fee_percent" class="block text-sm font-medium text-gray-700 mb-1">Deposit Fee (%)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" id="deposit_fee_percent" name="deposit_fee_percent" value="{{ settings.get('deposit_fee_percent', '1.0') }}" min="0" max="10" step="0.1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Fee percentage charged on deposits. Applied to USD amount before conversion to KES.</p>
+                    </div>
+                    
+                    <div>
+                        <label for="withdrawal_fee_percent" class="block text-sm font-medium text-gray-700 mb-1">Withdrawal Fee (%)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" id="withdrawal_fee_percent" name="withdrawal_fee_percent" value="{{ settings.get('withdrawal_fee_percent', '1.5') }}" min="0" max="10" step="0.1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Fee percentage charged on withdrawals. Applied to USD amount before conversion to KES.</p>
+                    </div>
+                    
+                    <!-- Update Frequency -->
+                    <div>
+                        <label for="forex_update_frequency" class="block text-sm font-medium text-gray-700 mb-1">Rate Update Frequency (hours)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" id="forex_update_frequency" name="forex_update_frequency" value="{{ settings.get('forex_update_frequency', '12') }}" min="1" step="1" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">How often to fetch new rates from the API (in hours)</p>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h3 class="font-medium text-blue-800 mb-2">Current Forex Rates</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Base Rate:</p>
+                                    <p class="text-lg font-semibold">{{ '%.2f'|format(forex_rate|default(129.50)) }} KES/USD</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Deposit Rate:</p>
+                                    <p class="text-lg font-semibold">{{ '%.2f'|format((deposit_rate * 0.99)|default(131.53)) }} KES/USD</p>
+                                    <p class="text-xs text-gray-500">(includes 1% fee)</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Withdrawal Rate:</p>
+                                    <p class="text-lg font-semibold">{{ '%.2f'|format((withdrawal_rate * 0.985)|default(124.37)) }} KES/USD</p>
+                                    <p class="text-xs text-gray-500">(includes 1.5% fee)</p>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-xs text-gray-500">Last updated: {{ forex_updated_at|default('Not available') }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between">
+                    <a href="{{ url_for('admin_forex') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        View Full Forex Dashboard
+                    </a>
+                    
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Forex Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Toggle switch styling */
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #68D391;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #68D391;
+    }
+    .toggle-label {
+        transition: background-color 0.3s ease;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,503 @@
+/* Import base styles */
+@import 'styles.css';
+
+/* Custom styles for dashboard */
+body {
+    background-color: #f8fafc;
+}
+
+/* Card hover effects */
+.rounded-xl {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rounded-xl:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 178, 178, 0.05);
+}
+
+/* Form styles */
+input, select {
+    transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--der-volt-teal);
+    box-shadow: 0 0 0 3px rgba(0, 178, 178, 0.1);
+}
+
+/* Table styles */
+.overflow-x-auto {
+    max-height: 300px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 178, 178, 0.2) transparent;
+
+    .transactions-table-header {
+      position: sticky;
+      top: 0;
+      
+    }
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 178, 178, 0.2);
+    border-radius: 3px;
+}
+
+/* Status badge animations */
+.bg-green-100 {
+    transition: all 0.2s ease;
+}
+
+/* Loading state for buttons */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: loading 0.6s linear infinite;
+}
+
+@keyframes loading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Light mode styles */
+body {
+    background-color: #f8fafc;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.text-gray-600 {
+    color: #4b5563;
+}
+
+.text-gray-700 {
+    color: #374151;
+}
+
+.text-gray-800 {
+    color: #1f2937;
+}
+
+.border-gray-200 {
+    border-color: #e5e7eb;
+}
+
+.border-gray-300 {
+    border-color: #d1d5db;
+}
+
+input, select {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+    color: #1f2937;
+}
+
+input::placeholder {
+    color: #9ca3af;
+}
+
+.hover\:bg-gray-50:hover {
+    background-color: #f9fafb;
+}
+
+/* Status badge colors */
+.bg-green-100 {
+    background-color: #d1fae5;
+}
+
+.text-green-800 {
+    color: #065f46;
+}
+
+/* Card shadows */
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Add these new styles for better visibility */
+.hover\:shadow-xl:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .max-w-7xl {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .px-6 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* Update color scheme */
+:root {
+    --primary-blue: #60A5FA; /* Light blue */
+    --primary-blue-dark: #3B82F6;
+    --background-start: #EFF6FF;
+    --background-end: #FFFFFF;
+}
+
+/* Update card styles */
+.bg-gradient-to-r {
+    background: linear-gradient(to right, var(--primary-blue), var(--primary-blue-dark));
+}
+
+/* Card shadows with blue tint */
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(96, 165, 250, 0.1),
+                0 4px 6px -2px rgba(96, 165, 250, 0.05);
+}
+
+.hover\:shadow-xl:hover {
+    box-shadow: 0 20px 25px -5px rgba(96, 165, 250, 0.1),
+                0 10px 10px -5px rgba(96, 165, 250, 0.05);
+}
+
+/* Update focus states */
+input:focus, select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+/* Update button colors */
+.bg-teal-600 {
+    background-color: var(--primary-blue);
+}
+
+.hover\:bg-teal-700:hover {
+    background-color: var(--primary-blue-dark);
+}
+
+.text-teal-600 {
+    color: var(--primary-blue);
+}
+
+.hover\:text-teal-700:hover {
+    color: var(--primary-blue-dark);
+}
+
+/* Update scrollbar colors */
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(96, 165, 250, 0.2);
+}
+
+/* Navbar styles */
+.nav-link {
+    display: flex;
+    align-items: center;
+    color: #4B5563;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #3B82F6;
+}
+
+/* Profile dropdown animation */
+#profileMenu {
+    transform-origin: top right;
+    transition: all 0.2s ease;
+}
+
+#profileMenu:not(.hidden) {
+    animation: dropdownSlide 0.2s ease forwards;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Notification dot pulse animation */
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(0.95); opacity: 0.9; }
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Update navbar height and spacing */
+nav.bg-white {
+    height: auto; /* Reset to default */
+}
+
+.flex.justify-between.h-16 {
+    height: 4rem; /* Reset to default Tailwind height */
+}
+
+.pt-16 {
+    padding-top: 4rem; /* Reset to default */
+}
+
+/* Ensure other nav elements are properly aligned */
+.flex.items-center.space-x-6 {
+    height: 4.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    nav.bg-white {
+        height: 4rem;
+    }
+    
+    .flex.justify-between.h-16 {
+        height: 4rem;
+    }
+    
+    .pt-16 {
+        padding-top: 4rem;
+    }
+    
+    /* Adjust logo size for mobile */
+    .flex-shrink-0 img {
+        height: 2rem; /* Reset to default mobile size */
+    }
+}
+
+/* Notification styles */
+#notificationMenu {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1000 !important;
+    max-height: 80vh !important;
+    min-height: 300px !important;
+    overflow-y: auto !important;
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+#notificationMenu.hidden {
+    display: none !important;
+}
+
+#notificationMenu:not(.hidden) {
+    display: block !important;
+}
+
+/* Ensure the dropdown content stays visible */
+#notificationMenu .overflow-y-auto {
+    min-height: 200px !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+}
+
+#notificationMenu .sticky {
+    position: sticky !important;
+    top: 0 !important;
+    background-color: white !important;
+    z-index: 10 !important;
+}
+
+/* Mobile notification styles */
+@media (max-width: 639px) {
+    #notificationMenu {
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        border-radius: 0 0 12px 12px;
+        height: auto !important;
+    }
+}
+
+/* Desktop notification styles */
+@media (min-width: 640px) {
+    #notificationMenu {
+        position: absolute !important;
+        top: 100% !important;
+        right: 0 !important;
+        width: 400px !important;
+        min-width: 380px !important;
+        border-radius: 0.75rem !important;
+    }
+}
+
+/* Dropdown animation */
+@keyframes dropdownAppear {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-item {
+    border-color: rgba(229, 231, 235, 0.8);
+}
+
+.notification-item:hover {
+    background-color: rgba(96, 165, 250, 0.05);
+}
+
+/* Scrollbar for notification list */
+.max-h-80 {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(96, 165, 250, 0.2) transparent;
+}
+
+.max-h-80::-webkit-scrollbar {
+    width: 4px;
+}
+
+.max-h-80::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.max-h-80::-webkit-scrollbar-thumb {
+    background-color: rgba(96, 165, 250, 0.2);
+    border-radius: 2px;
+}
+
+/* Active navigation link styles */
+.text-blue-600 {
+    position: relative;
+}
+
+.text-blue-600::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: currentColor;
+    transform: scaleX(1);
+    transition: transform 0.2s ease;
+}
+
+/* Update balance text color */
+.available-balance {
+    color: white; /* Changed to white for better contrast on teal background */
+    font-weight: bold; /* Make it bold for emphasis */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Add subtle shadow for better readability */
+}
+
+/* Ensure the balance amount is styled correctly */
+.text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+}
+
+.bg-gradient-to-r.from-teal-600.to-teal-500 .text-4xl {
+    color: white; /* Ensure text is white on teal background */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Add subtle shadow for better readability */
+}
+
+/* Balance card styles */
+.bg-gradient-to-r.from-teal-600.to-teal-500 {
+    background: linear-gradient(to right, #3B82F6, #2563EB);
+}
+
+.bg-gradient-to-r.from-teal-600.to-teal-500 .text-white {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Additional fixes for notification dropdown */
+.notification-container {
+    position: relative !important;
+}
+
+/* Profile dropdown specific styles */
+#profileDropdown {
+    display: flex;
+    align-items: center;
+}
+
+/* Ensure user profile info is visible */
+[data-user-name], [data-user-email] {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    line-height: 1.2;
+}
+
+/* Add a little breathing room between name and email */
+[data-user-name] {
+    margin-bottom: 2px;
+}
+
+/* Fix spacing for profile dropdown button */
+#profileDropdown > img {
+    flex-shrink: 0;
+    margin-right: 0.5rem !important;
+}
+
+#profileDropdown .fa-chevron-down {
+    margin-left: 0.25rem;
+}
+
+/* Mobile profile dropdown styles */
+@media (max-width: 767px) {
+    .hidden.md\:block {
+        display: none !important;
+    }
+    
+    #profileDropdown > .hidden.md\:block {
+        display: none !important;
+    }
+    
+    #profileDropdown > img {
+        margin-right: 0.25rem !important; 
+    }
+}
+
+/* Desktop profile styles */
+@media (min-width: 768px) {
+    .hidden.md\:block {
+        display: block !important;
+    }
+    
+    [data-user-name], [data-user-email] {
+        display: block !important;
+    }
+}

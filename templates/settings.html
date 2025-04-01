@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Color scheme support -->
+    <meta name="color-scheme" content="light dark">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Der-volt account settings">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Der-volt">
+    <meta name="application-name" content="Der-volt">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/pwa/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/pwa/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/pwa/icon-16x16.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark-mode.css') }}">
+    
+    <title>Settings - Der-volt</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    },
+                    fontFamily: {
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fix FontAwesome CORS issue by using a CDN link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* Mobile menu button styles - to fix white corners */
+        @media (max-width: 768px) {
+            #mobileMenuButton {
+                border-radius: 9999px !important;
+                background-color: #3B82F6 !important;
+                box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -4px rgba(59, 130, 246, 0.4) !important;
+                border: none !important;
+                overflow: hidden !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 48px !important;
+                height: 48px !important;
+                margin: 0 !important;
+                padding: 0.75rem !important;
+            }
+            
+            .fixed.bottom-6.right-6.md\:hidden.z-50 {
+                background: transparent !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                width: 48px !important;
+                height: 48px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            /* Remove any potential borders or outlines */
+            #mobileMenuButton:focus {
+                outline: none !important;
+            }
+            
+            #mobileMenuButton i {
+                color: white !important;
+                font-size: 1.25rem !important;
+            }
+        }
+        
+        /* Dark mode specific styles for mobile menu */
+        @media (prefers-color-scheme: dark) and (max-width: 768px) {
+            #mobileMenuButton {
+                background-color: #3B82F6 !important;
+                box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-poppins bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Left side -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="{{ url_for('dashboard') }}">
+                            <img src="{{ url_for('static', filename='assets/der-volt-logo.png') }}" alt="Der-volt Logo" class="h-8 w-auto">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right side -->
+                <div class="flex items-center space-x-6">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="{{ url_for('dashboard') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-home mr-2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{{ url_for('settings') }}" class="text-primary-600 hover:text-primary-700 transition-colors flex items-center">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="{{ url_for('help') }}" class="text-gray-600 hover:text-primary-600 transition-colors flex items-center">
+                            <i class="fas fa-question-circle mr-2"></i>
+                            <span>Help & Support</span>
+                        </a>
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-3 focus:outline-none group" id="profileDropdown">
+                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=3b82f6&color=fff&size=32&rounded=true" 
+                                 alt="Profile" 
+                                 class="h-8 w-8 rounded-full">
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-200 group-hover:rotate-180"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 hidden transform origin-top-right transition-all duration-200" id="profileMenu">
+                            <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-800">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="text-xs text-gray-500">{{ user.email }}</p>
+                            </div>
+                            <a href="{{ url_for('dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-home mr-2 w-5 text-center"></i>
+                                Dashboard
+                            </a>
+                            <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 bg-gray-50">
+                                <i class="fas fa-cog mr-2 w-5 text-center"></i>
+                                Settings
+                            </a>
+                            <a href="{{ url_for('help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-question-circle mr-2 w-5 text-center"></i>
+                                Help & Support
+                            </a>
+                            <div class="border-t border-gray-100 mt-1"></div>
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i>
+                                Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Button (visible on small screens) -->
+    <div class="fixed bottom-6 right-6 md:hidden z-50">
+        <button class="bg-primary-600 text-white p-3 rounded-full shadow-lg hover:bg-primary-700 transition-colors flex items-center justify-center w-12 h-12" id="mobileMenuButton">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Menu (visible on small screens) -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden" id="mobileMenuOverlay">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white shadow-xl transform transition-transform duration-300 translate-x-full" id="mobileMenuPanel">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-semibold text-lg">Menu</h3>
+                <button class="text-gray-500 hover:text-gray-700" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="py-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-home mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="flex items-center px-4 py-3 text-gray-700 bg-gray-100">
+                    <i class="fas fa-cog mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('help') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100">
+                    <i class="fas fa-question-circle mr-3 w-5 text-center text-primary-500"></i>
+                    <span>Help & Support</span>
+                </a>
+                <div class="border-t border-gray-100 my-2"></div>
+                <a href="{{ url_for('logout') }}" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pt-20 pb-8 bg-white min-h-screen">
+        <div class="flex flex-col md:flex-row gap-8 max-w-5xl mx-auto">
+            <!-- Sidebar Navigation -->
+            <div class="md:w-64 flex-shrink-0">
+                <div class="bg-white rounded-xl shadow-sm p-4 sticky top-20">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Settings</h2>
+                    <nav class="space-y-1">
+                        <a href="#personal-info" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary-50 text-primary-700">
+                            <i class="fas fa-user mr-3 text-primary-500"></i>
+                            <span>Personal Information</span>
+                        </a>
+                        <a href="#payment-method" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-primary-700">
+                            <i class="fas fa-credit-card mr-3 text-gray-400 group-hover:text-primary-500"></i>
+                            <span>Payment Method</span>
+                        </a>
+                        <a href="#security" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-primary-700">
+                            <i class="fas fa-shield-alt mr-3 text-gray-400 group-hover:text-primary-500"></i>
+                            <span>Security</span>
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Settings Content -->
+            <div class="flex-1 space-y-8">
+                <!-- Personal Information -->
+                <section id="personal-info" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-300 scroll-mt-24">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-user mr-3 text-primary-500"></i>
+                        Personal Information
+                    </h2>
+                    <div class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Your personal information cannot be modified directly. Please contact support if you need to update your information.
+                    </div>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="userID" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                                <input type="text" id="userID" name="userID" value="{{ user.id }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-700" readonly>
+                            </div>
+                            <div>
+                                <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input type="text" id="firstName" name="firstName" value="{{ user.first_name }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-700" readonly>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" value="{{ user.last_name }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-700" readonly>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" id="email" name="email" value="{{ user.email }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-700" readonly>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="{{ user.phone_number }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-700" readonly>
+                            </div>
+                    </div>
+                </section>
+
+                <!-- Payment Method -->
+                <section id="payment-method" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-300 scroll-mt-24">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-credit-card mr-3 text-primary-500"></i>
+                        Payment Method
+                    </h2>
+                    <form id="paymentMethodForm" class="space-y-6">
+                        <!-- Payment Method Selection -->
+                        <div>
+                            <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Select Payment Method</label>
+                            <select id="paymentMethodSelect" name="paymentMethod" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                <option value="">Select payment method...</option>
+                                <option value="mpesa" selected>M-Pesa</option>
+                                <option value="bank_account">Bank Account</option>
+                                <option value="card_payment">Card Payment</option>
+                            </select>
+                        </div>
+
+                        <!-- Deriv Account Selection -->
+                        <div class="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h3 class="text-md font-medium text-gray-800">Deriv Account</h3>
+                            <div>
+                                <label for="derivAccount" class="block text-sm font-medium text-gray-700 mb-1">Select Deriv account</label>
+                                <select id="derivAccountSelect" name="derivAccount" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="">Select Deriv account...</option>
+                                    {% for account in accounts %}
+                                    <option value="{{ account.id }}" {% if account.is_default == 1 %}selected{% endif %}>{{ account.account_number }} - {{ account.account_name }}{% if account.is_default == 1 %} (Default){% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                                <p id="defaultAccountInfo" class="mt-2 text-sm text-blue-600 {% if not any_default_account %}hidden{% endif %}">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    The selected account will be used as default for all transactions.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- M-Pesa Details (shown when M-Pesa is selected) -->
+                        <div id="mpesaDetails" class="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h3 class="text-md font-medium text-gray-800">M-Pesa Details</h3>
+                            <div>
+                                <label for="mpesaPhone" class="block text-sm font-medium text-gray-700 mb-1">M-Pesa Phone Number</label>
+                                <div class="relative">
+                                    <input type="tel" id="mpesaPhone" name="mpesaPhone" value="{{ user.phone_number }}" data-original-number="{{ user.phone_number }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500" placeholder="e.g. 254712345678">
+                                    <div id="phoneChangeWarning" class="hidden mt-2 p-2 bg-yellow-50 text-yellow-700 text-sm rounded border border-yellow-200">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        You are about to change your default M-Pesa number. Make sure the new number is registered with M-Pesa.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bank Account Details (shown when Bank Account is selected) -->
+                        <div id="bankDetails" class="hidden space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h3 class="text-md font-medium text-gray-800">Bank Account Details</h3>
+                            <div>
+                                <label for="accountName" class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                                <input type="text" id="accountName" name="accountName" value="{{ user.first_name }} {{ user.last_name }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                            <div>
+                                <label for="accountNumber" class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                                <input type="text" id="accountNumber" name="accountNumber" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                            <div>
+                                <label for="bankName" class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                                <select id="bankName" name="bankName" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="">Select bank...</option>
+                                    <option value="stanbic">Stanbic Bank</option>
+                                    <option value="kcb">KCB Bank</option>
+                                    <option value="equity">Equity Bank</option>
+                                    <option value="coop">Co-operative Bank</option>
+                                    <option value="family">Family Bank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Card Payment Details (shown when Card Payment is selected) -->
+                        <div id="cardDetails" class="hidden space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h3 class="text-md font-medium text-gray-800">Card Payment Details</h3>
+                            <div>
+                                <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
+                                <input type="text" id="cardName" name="cardName" value="{{ user.first_name }} {{ user.last_name }}" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                            <div>
+                                <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                                <input type="text" id="cardNumber" name="cardNumber" placeholder="•••• •••• •••• ••••" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="expiryDate" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                    <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <div>
+                                    <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                    <input type="text" id="cvv" name="cvv" placeholder="•••" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200">
+                                <i class="fas fa-save mr-2"></i>
+                                Save Payment Method
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Security -->
+                <section id="security" class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-300 scroll-mt-24">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-shield-alt mr-3 text-primary-500"></i>
+                        Security
+                    </h2>
+                    
+                    <!-- Password change success message (hidden by default) -->
+                    <div id="passwordChangeSuccess" class="mb-4 p-3 bg-green-50 border border-green-100 rounded-lg text-sm text-green-700 hidden">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span>Your password has been changed successfully!</span>
+                    </div>
+                    
+                    <!-- Password change error message (hidden by default) -->
+                    <div id="passwordChangeError" class="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700 hidden">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <span id="errorMessage">An error occurred. Please try again.</span>
+                    </div>
+                    
+                    <form id="passwordChangeForm" class="space-y-6">
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" placeholder="••••••••" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500" required>
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" placeholder="••••••••" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500" required minlength="8">
+                            <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters long.</p>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500" required>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" id="updatePasswordBtn" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200">
+                                <i class="fas fa-key mr-2"></i>
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal (Hidden by default) -->
+    <div id="otpModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <!-- Modal panel -->
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div>
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary-100">
+                        <i class="fas fa-shield-alt text-primary-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-5">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Verify Your Identity</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">We've sent a verification code to your email. Please enter the 6-character code below to complete the password change. The code contains lowercase letters and numbers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="otpVerificationForm" class="mt-5 space-y-4">
+                    <div>
+                        <label for="otpCode" class="text-center block text-sm font-medium text-gray-700 mb-2">Enter 6-Character Code (lowercase)</label>
+                        <div class="flex justify-center space-x-2">
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                            <input type="text" maxlength="1" class="otp-input w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-primary-500" required>
+                        </div>
+                        <input type="hidden" id="compiledOTP" name="otp">
+                        <p id="otpError" class="mt-2 text-sm text-red-600 hidden">Please enter a valid 6-character code</p>
+                    </div>
+                    <div>
+                        <p class="text-center text-sm text-gray-500">
+                            Didn't receive the code? 
+                            <button type="button" id="resendOTPBtn" class="text-primary-600 hover:text-primary-500 font-medium">Resend</button>
+                        </p>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button type="button" id="cancelOTPBtn" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                            Cancel
+                        </button>
+                        <button type="submit" id="verifyOTPBtn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm">
+                            Verify
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Install Button (hidden by default, shown by JavaScript when installation is available) -->
+    <div class="fixed bottom-4 right-4 hidden" id="pwa-install-button" data-pwa-install>
+        <button class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+            <i class="fas fa-download"></i>
+            <span class="hidden sm:inline">Install App</span>
+        </button>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col space-y-4 items-end max-w-md"></div>
+
+    <!-- Toast Notification Script -->
+    <script>
+        // Toast notification system
+        const toastContainer = document.getElementById('toast-container');
+        
+        /**
+         * Show a toast notification
+         * @param {string} message - The message to display
+         * @param {string} type - The type of notification (success, error, info, warning)
+         * @param {number} duration - How long to show the notification in ms
+         */
+        function showToast(message, type = 'success', duration = 5000) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'transform transition-all duration-300 ease-out translate-x-full opacity-0 flex items-center p-4 mb-3 max-w-md rounded-lg shadow-lg';
+            
+            // Set background color based on type
+            let icon, bgColor, textColor;
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-50 border-l-4 border-green-500';
+                    textColor = 'text-green-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 text-green-500 mr-3"><i class="fas fa-check"></i></div>';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-50 border-l-4 border-red-500';
+                    textColor = 'text-red-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-red-100 text-red-500 mr-3"><i class="fas fa-times"></i></div>';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-50 border-l-4 border-yellow-500';
+                    textColor = 'text-yellow-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-yellow-100 text-yellow-500 mr-3"><i class="fas fa-exclamation"></i></div>';
+                    break;
+                case 'info':
+                    bgColor = 'bg-blue-50 border-l-4 border-blue-500';
+                    textColor = 'text-blue-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 text-blue-500 mr-3"><i class="fas fa-info"></i></div>';
+                    break;
+                default:
+                    bgColor = 'bg-gray-50 border-l-4 border-gray-500';
+                    textColor = 'text-gray-800';
+                    icon = '<div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 text-gray-500 mr-3"><i class="fas fa-bell"></i></div>';
+            }
+            
+            toast.className += ` ${bgColor}`;
+            
+            // Set inner HTML
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${icon}
+                    <div class="flex-grow ${textColor} text-sm font-medium">
+                        ${message}
+                    </div>
+                    <button type="button" class="ml-auto -mx-1.5 -my-1.5 ${textColor} hover:text-gray-900 rounded-lg p-1.5 inline-flex h-8 w-8 focus:ring-2 focus:ring-gray-300" aria-label="Close">
+                        <span class="sr-only">Close</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add toast to container
+            toastContainer.appendChild(toast);
+            
+            // Get close button and add event listener
+            const closeButton = toast.querySelector('button');
+            closeButton.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Trigger entry animation
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 10);
+            
+            // Set automatic removal after duration
+            const timeoutId = setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+            
+            // Store timeout ID on the element for potential early removal
+            toast._timeoutId = timeoutId;
+            
+            return toast;
+        }
+        
+        /**
+         * Remove a toast with animation
+         * @param {HTMLElement} toast - The toast element to remove
+         */
+        function removeToast(toast) {
+            clearTimeout(toast._timeoutId);
+            
+            // Trigger exit animation
+            toast.classList.add('translate-x-full', 'opacity-0');
+            
+            // Remove from DOM after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    </script>
+    
+    <script>
+        // Settings page specific code
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle Profile Dropdown
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileMenu = document.getElementById('profileMenu');
+            
+            profileDropdown.addEventListener('click', function() {
+                profileMenu.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!profileDropdown.contains(event.target) && !profileMenu.contains(event.target)) {
+                    profileMenu.classList.add('hidden');
+                }
+            });
+            
+            // Smooth scrolling for navigation links
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    navLinks.forEach(navLink => {
+                        navLink.classList.remove('bg-primary-50', 'text-primary-700');
+                        navLink.classList.add('text-gray-700', 'hover:bg-gray-50', 'hover:text-primary-700');
+                        navLink.querySelector('i').classList.remove('text-primary-500');
+                        navLink.querySelector('i').classList.add('text-gray-400');
+                    });
+                    
+                    this.classList.remove('text-gray-700', 'hover:bg-gray-50', 'hover:text-primary-700');
+                    this.classList.add('bg-primary-50', 'text-primary-700');
+                    this.querySelector('i').classList.remove('text-gray-400');
+                    this.querySelector('i').classList.add('text-primary-500');
+                });
+            });
+            
+            // Payment method form
+            const paymentMethodForm = document.getElementById('paymentMethodForm');
+            const derivAccountSelect = document.getElementById('derivAccountSelect');
+            const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+            const mpesaPhone = document.getElementById('mpesaPhone');
+            const defaultAccountInfo = document.getElementById('defaultAccountInfo');
+            const mpesaDetails = document.getElementById('mpesaDetails');
+            const bankDetails = document.getElementById('bankDetails');
+            const cardDetails = document.getElementById('cardDetails');
+            
+            // Initialize payment method selection from server-provided data
+            if (paymentMethodSelect) {
+                // Set the payment method from server data (user.preferred_payment_method in the Jinja template)
+                const serverPreferredMethod = "{{ user.preferred_payment_method }}";
+                if (serverPreferredMethod) {
+                    // Find and select the option matching the server value
+                    const option = Array.from(paymentMethodSelect.options).find(opt => opt.value === serverPreferredMethod);
+                    if (option) {
+                        paymentMethodSelect.value = serverPreferredMethod;
+                        console.log(`Initialized payment method from server: ${serverPreferredMethod}`);
+                        
+                        // Make sure the correct details section is shown immediately
+                        togglePaymentDetails(serverPreferredMethod);
+                    }
+                }
+            }
+            
+            // Function to show/hide payment details sections based on selected method
+            function togglePaymentDetails(paymentMethod) {
+                // Hide all payment details sections first
+                mpesaDetails.classList.add('hidden');
+                bankDetails.classList.add('hidden');
+                cardDetails.classList.add('hidden');
+                
+                // Show the relevant section based on the selected payment method
+                if (paymentMethod === 'mpesa') {
+                    mpesaDetails.classList.remove('hidden');
+                } else if (paymentMethod === 'bank_account') {
+                    bankDetails.classList.remove('hidden');
+                } else if (paymentMethod === 'card_payment') {
+                    cardDetails.classList.remove('hidden');
+                }
+            }
+            
+            // Set up payment method selection change handler
+            if (paymentMethodSelect) {
+                paymentMethodSelect.addEventListener('change', function() {
+                    togglePaymentDetails(this.value);
+                });
+                
+                // Initialize with the current selection
+                togglePaymentDetails(paymentMethodSelect.value);
+            }
+            
+            // Update default account info visibility
+            if (derivAccountSelect) {
+                derivAccountSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        defaultAccountInfo.classList.remove('hidden');
+                    } else {
+                        defaultAccountInfo.classList.add('hidden');
+                    }
+                });
+                
+                // Show default account info if an option is selected on page load
+                if (derivAccountSelect.value) {
+                    defaultAccountInfo.classList.remove('hidden');
+                }
+            }
+            
+            if (paymentMethodForm) {
+                paymentMethodForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Gather form data
+                    const formData = {
+                        payment_method: paymentMethodSelect.value,
+                        deriv_account: derivAccountSelect.value,
+                        mpesa_phone: mpesaPhone ? mpesaPhone.value : null
+                    };
+                    
+                    // Validate form data before submission
+                    if (!paymentMethodSelect.value) {
+                        showToast('Please select a payment method', 'error');
+                        return;
+                    }
+                    
+                    // Send to server via AJAX
+                    fetch('/settings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Save locally for immediate feedback only after successful server update
+                        if (derivAccountSelect && derivAccountSelect.value) {
+                            localStorage.setItem('defaultAccountId', derivAccountSelect.value);
+                            localStorage.setItem('selectedAccountId', derivAccountSelect.value); // Set as current selected account too
+                            console.log('Saved default account ID to localStorage:', derivAccountSelect.value);
+                        }
+                        
+                        // Save the selected payment method locally after successful server update
+                        localStorage.setItem('preferredPaymentMethod', paymentMethodSelect.value);
+                        
+                        // Show success message
+                        showToast(data.message || 'Payment method settings saved successfully!', 'success');
+                        
+                        // Update selected option text to show it's now the default
+                        if (derivAccountSelect.value) {
+                            const selectedOption = derivAccountSelect.options[derivAccountSelect.selectedIndex];
+                            // Only add (Default) if it's not already there
+                            if (!selectedOption.text.includes('(Default)')) {
+                                selectedOption.text = selectedOption.text + ' (Default)';
+                            }
+                            
+                            // Remove (Default) from other options
+                            Array.from(derivAccountSelect.options).forEach(option => {
+                                if (option.value && option.value !== derivAccountSelect.value && option.text.includes('(Default)')) {
+                                    option.text = option.text.replace(' (Default)', '');
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving payment settings:', error);
+                        showToast('An error occurred. Please try again', 'error');
+                    });
+                });
+            }
+            
+            // M-Pesa phone number change warning
+            if (mpesaPhone) {
+                mpesaPhone.addEventListener('input', function() {
+                    const originalNumber = this.getAttribute('data-original-number');
+                    if (this.value !== originalNumber && this.value.length > 0) {
+                        document.getElementById('phoneChangeWarning').classList.remove('hidden');
+                    } else {
+                        document.getElementById('phoneChangeWarning').classList.add('hidden');
+                    }
+                });
+            }
+
+            // Password change with OTP verification
+            const passwordChangeForm = document.getElementById('passwordChangeForm');
+            const otpModal = document.getElementById('otpModal');
+            const otpVerificationForm = document.getElementById('otpVerificationForm');
+            const cancelOTPBtn = document.getElementById('cancelOTPBtn');
+            const resendOTPBtn = document.getElementById('resendOTPBtn');
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const compiledOTP = document.getElementById('compiledOTP');
+            const passwordChangeSuccess = document.getElementById('passwordChangeSuccess');
+            const passwordChangeError = document.getElementById('passwordChangeError');
+            
+            // Hide any error messages on page load
+            if (passwordChangeError) {
+                passwordChangeError.classList.add('hidden');
+            }
+            
+            // Handle OTP input fields - auto advance and compile OTP
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    const value = e.target.value;
+                    
+                    // Convert to lowercase to match the OTP format
+                    if (value) {
+                        this.value = value.toLowerCase();
+                    }
+                    
+                    // Auto-advance to next input if a character was entered
+                    if (value && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                    
+                    // Compile OTP value
+                    compiledOTP.value = Array.from(otpInputs).map(input => input.value).join('');
+                    
+                    // Hide error message when typing
+                    document.getElementById('otpError').classList.add('hidden');
+                });
+                
+                // Handle backspace key
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+                
+                // Handle paste event for OTP
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    if (paste) {
+                        // Distribute the pasted characters to the inputs
+                        const chars = paste.split('');
+                        otpInputs.forEach((input, idx) => {
+                            if (chars[idx]) {
+                                input.value = chars[idx].toLowerCase();
+                            }
+                        });
+                        
+                        // Compile the OTP after all inputs are set
+                        compiledOTP.value = Array.from(otpInputs).map(input => input.value || '').join('');
+                        
+                        // Focus the field after the last filled one
+                        if (chars.length < otpInputs.length) {
+                            otpInputs[Math.min(chars.length, otpInputs.length - 1)].focus();
+                        } else {
+                            otpInputs[otpInputs.length - 1].focus();
+                        }
+                    }
+                });
+            });
+            
+            // Resend OTP button
+            if (resendOTPBtn) {
+                resendOTPBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Sending...';
+                    
+                    // Simulate OTP resend (replace with actual API call)
+                    setTimeout(() => {
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-redo mr-2"></i> Resend Code';
+                        
+                        // Show success message
+                        showToast('A new verification code has been sent to your email.', 'info');
+                        
+                        // Reset OTP fields
+                        otpInputs.forEach(input => {
+                            input.value = '';
+                        });
+                        compiledOTP.value = '';
+                        otpInputs[0].focus();
+                    }, 2000);
+                });
+            }
+            
+            // Handle password change form submission
+            if (passwordChangeForm) {
+                passwordChangeForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    // Password change form handling code would go here
+                });
+            }
+        });
+    </script>
+    
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            // If the menu is already visible, close it
+            if (!mobileMenuOverlay.classList.contains('hidden')) {
+                closeMobileMenu();
+            } else {
+                // Otherwise, open it
+                mobileMenuOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    mobileMenuPanel.classList.add('translate-x-0');
+                    mobileMenuPanel.classList.remove('translate-x-full');
+                }, 50);
+            }
+        });
+        
+        function closeMobileMenu() {
+            mobileMenuPanel.classList.remove('translate-x-0');
+            mobileMenuPanel.classList.add('translate-x-full');
+            setTimeout(() => {
+                mobileMenuOverlay.classList.add('hidden');
+            }, 300);
+        }
+        
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+        mobileMenuOverlay.addEventListener('click', function(event) {
+            if (event.target === mobileMenuOverlay) {
+                closeMobileMenu();
+            }
+        });
+    </script>
+    
+    <script>
+        // PWA Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html> 

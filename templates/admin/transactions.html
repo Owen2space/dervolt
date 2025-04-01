@@ -1,0 +1,426 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Transaction Management{% endblock %}
+
+{% block page_title %}Transaction Management{% endblock %}
+{% block page_subtitle %}View and manage all platform transactions{% endblock %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <!-- Remove duplicate headings -->
+            </div>
+            <div class="flex space-x-3">
+                <button type="button" class="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-download mr-2"></i> Export
+                </button>
+                <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-plus mr-2"></i> New Transaction
+                </button>
+            </div>
+        </div>
+        
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-4 mb-4 rounded-md {{ 'bg-green-100 text-green-800' if message.type == 'success' else 'bg-red-100 text-red-800' }}">
+                {{ message.text }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Card 1: Total Transactions -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                            <i class="fas fa-exchange-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Transactions</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ total_transactions }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 2: Total Volume -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                            <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Volume</dt>
+                                <dd class="text-lg font-medium text-gray-900">${{ total_volume|default('0.00') }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 3: Pending Transactions -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Pending</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ pending_count|default('0') }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 4: Failed Transactions -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                            <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Failed</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ failed_count|default('0') }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search and Filter Section -->
+        <div class="bg-white shadow rounded-lg mb-6 p-4">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-grow">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Transactions</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" name="search" id="search" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Search by reference, amount, or user">
+                    </div>
+                </div>
+                <div class="w-full md:w-1/5">
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">All Statuses</option>
+                        <option value="success">Success</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/5">
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select id="type" name="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">All Types</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                        <option value="transfer">Transfer</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/5">
+                    <label for="date-range" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                    <select id="date-range" name="date-range" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transactions Table -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% if transactions %}
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <a href="{{ url_for('admin_transaction_detail', reference=transaction.reference) }}" class="text-indigo-600 hover:text-indigo-900">
+                                            {{ transaction.reference }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                            <span class="text-sm text-gray-500">
+                                                {% if transaction.user and transaction.user.first_name %}
+                                                    {{ transaction.user.first_name[0]|upper }}
+                                                {% else %}
+                                                    U
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {% if transaction.user %}
+                                                    {% if transaction.user.first_name and transaction.user.last_name %}
+                                                        {{ transaction.user.first_name }} {{ transaction.user.last_name }}
+                                                    {% else %}
+                                                        Unknown User
+                                                    {% endif %}
+                                                {% else %}
+                                                    Unknown User
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {% if transaction.account_number %}
+                                                    {{ transaction.account_number }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        {% if transaction.transaction_type == 'deposit' %}
+                                            bg-green-100 text-green-800
+                                        {% elif transaction.transaction_type == 'withdrawal' %}
+                                            bg-blue-100 text-blue-800
+                                        {% else %}
+                                            bg-purple-100 text-purple-800
+                                        {% endif %}
+                                    ">
+                                        {{ transaction.transaction_type|title }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="font-medium 
+                                        {% if transaction.transaction_type == 'deposit' %}
+                                            text-green-600
+                                        {% elif transaction.transaction_type == 'withdrawal' %}
+                                            text-red-600
+                                        {% else %}
+                                            text-gray-900
+                                        {% endif %}
+                                    ">
+                                        {% if transaction.transaction_type == 'withdrawal' %}
+                                            -
+                                        {% elif transaction.transaction_type == 'deposit' %}
+                                            +
+                                        {% endif %}
+                                        ${{ "%.2f"|format(transaction.amount|float) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                        {% if transaction.status == 'success' %}
+                                            bg-green-100 text-green-800
+                                        {% elif transaction.status == 'pending' %}
+                                            bg-yellow-100 text-yellow-800
+                                        {% elif transaction.status == 'failed' %}
+                                            bg-red-100 text-red-800
+                                        {% else %}
+                                            bg-gray-100 text-gray-800
+                                        {% endif %}
+                                    ">
+                                        {{ transaction.status|title }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ transaction.created_at }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{{ url_for('admin_transaction_detail', reference=transaction.reference) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                                    {% if transaction.status == 'pending' %}
+                                    <a href="#" class="text-green-600 hover:text-green-900 mr-3 approve-action" data-reference="{{ transaction.reference }}">Approve</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900 reject-action" data-reference="{{ transaction.reference }}">Reject</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    No transactions found
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-lg shadow">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('admin_transactions', page=pagination.prev_num) if pagination.has_prev else '#' }}" class="{{ 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' if pagination.has_prev else 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed' }}">
+                    Previous
+                </a>
+                {% endif %}
+                {% if pagination.has_next %}
+                <a href="{{ url_for('admin_transactions', page=pagination.next_num) if pagination.has_next else '#' }}" class="{{ 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' if pagination.has_next else 'ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-gray-100 cursor-not-allowed' }}">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing
+                        <span class="font-medium">{{ pagination.first_item }}</span>
+                        to
+                        <span class="font-medium">{{ pagination.last_item }}</span>
+                        of
+                        <span class="font-medium">{{ pagination.total }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <!-- Previous Page -->
+                        {% if pagination.has_prev %}
+                        <a href="{{ url_for('admin_transactions', page=pagination.prev_num) if pagination.has_prev else '#' }}" class="{{ 'relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50' if pagination.has_prev else 'relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400' }}">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Page Numbers -->
+                        {% for page in pagination.iter_pages() %}
+                            {% if page %}
+                                {% if page != pagination.page %}
+                                <a href="{{ url_for('admin_transactions', page=page) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    {{ page }}
+                                </a>
+                                {% else %}
+                                <span class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                    {{ page }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Next Page -->
+                        {% if pagination.has_next %}
+                        <a href="{{ url_for('admin_transactions', page=pagination.next_num) if pagination.has_next else '#' }}" class="{{ 'relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50' if pagination.has_next else 'relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400' }}">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed z-10 inset-0 overflow-y-auto hidden">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-exclamation-triangle text-red-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Reject Transaction
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500" id="modal-description">
+                                    Are you sure you want to reject this transaction? This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <form id="confirmForm" method="POST" action="">
+                        <button type="submit" id="actionButton" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Reject
+                        </button>
+                    </form>
+                    <button type="button" onclick="hideModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function confirmReject(reference) {
+        document.getElementById('modal-title').textContent = 'Reject Transaction';
+        document.getElementById('modal-description').textContent = `Are you sure you want to reject this transaction (${reference})? This action cannot be undone.`;
+        document.getElementById('confirmForm').action = `/admin/transaction/reject/${reference}`;
+        document.getElementById('actionButton').textContent = 'Reject';
+        document.getElementById('actionButton').className = 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm';
+        document.getElementById('confirmModal').classList.remove('hidden');
+    }
+    
+    function confirmApprove(reference) {
+        document.getElementById('modal-title').textContent = 'Approve Transaction';
+        document.getElementById('modal-description').textContent = `Are you sure you want to approve this transaction (${reference})? This will update the account balance. This action cannot be undone.`;
+        document.getElementById('confirmForm').action = `/admin/transaction/approve/${reference}`;
+        document.getElementById('actionButton').textContent = 'Approve';
+        document.getElementById('actionButton').className = 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm';
+        document.getElementById('confirmModal').classList.remove('hidden');
+    }
+    
+    function hideModal() {
+        document.getElementById('confirmModal').classList.add('hidden');
+    }
+    
+    // Add event listeners for reject and approve actions
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.reject-action').forEach(function(element) {
+            element.addEventListener('click', function(e) {
+                e.preventDefault();
+                confirmReject(this.getAttribute('data-reference'));
+            });
+        });
+        
+        document.querySelectorAll('.approve-action').forEach(function(element) {
+            element.addEventListener('click', function(e) {
+                e.preventDefault();
+                confirmApprove(this.getAttribute('data-reference'));
+            });
+        });
+    });
+</script>
+{% endblock %} 

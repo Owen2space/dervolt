@@ -1,0 +1,3 @@
+Place a logo image file named "der-volt-logo.png" in this directory.
+This file should be referenced in the templates as:
+{{ url_for('static', filename='images/der-volt-logo.png') }} 

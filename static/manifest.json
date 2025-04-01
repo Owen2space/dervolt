@@ -1,0 +1,16 @@
+{
+  "name": "Der-Volt",
+  "short_name": "Der-Volt",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#191919",
+  "theme_color": "#191919",
+  "description": "Der-volt",
+  "icons": [
+    {
+      "src": "/static/assets/der-volt-logo.png",
+      "sizes": "230x230",
+      "type": "image/png"
+    }
+  ]
+}

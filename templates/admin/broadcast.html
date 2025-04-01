@@ -1,0 +1,419 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Broadcast System{% endblock %}
+
+{% block page_title %}Broadcast System{% endblock %}
+{% block page_subtitle %}Send messages to all users{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="tab-container flex bg-gray-100 rounded-lg overflow-hidden mb-6">
+        <div class="tab active flex-1 py-3 px-4 text-center font-medium cursor-pointer" data-tab="create">Create Broadcast</div>
+        <div class="tab flex-1 py-3 px-4 text-center font-medium cursor-pointer" data-tab="templates">Templates</div>
+        <div class="tab flex-1 py-3 px-4 text-center font-medium cursor-pointer" data-tab="history">History</div>
+        <div class="tab flex-1 py-3 px-4 text-center font-medium cursor-pointer" data-tab="stats">Analytics</div>
+    </div>
+    
+    <div id="create" class="tab-content active">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Create New Broadcast Message</h2>
+            </div>
+            <div class="p-6">
+                <form action="{{ url_for('admin_send_broadcast') }}" method="POST" class="space-y-6">
+                    <div class="form-group space-y-2">
+                        <label for="message-title" class="block text-sm font-medium text-gray-700">Message Title</label>
+                        <input type="text" id="message-title" name="message-title" placeholder="Enter a clear and concise title" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div class="form-group space-y-2">
+                        <label for="message-category" class="block text-sm font-medium text-gray-700">Message Category</label>
+                        <select id="message-category" name="message-category" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="maintenance">System Maintenance</option>
+                            <option value="security">Security Alert</option>
+                            <option value="update">System Update</option>
+                            <option value="announcement">General Announcement</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group space-y-2">
+                        <label for="message-content" class="block text-sm font-medium text-gray-700">Message Content</label>
+                        <textarea id="message-content" name="message-content" rows="5" placeholder="Type your message here..." class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                    </div>
+                    
+                    <div class="form-group space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">Send To</label>
+                        <div class="flex items-center space-x-2">
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                <input type="checkbox" id="send-email" name="send-email" checked class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer">
+                                <label for="send-email" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                            <span class="text-sm text-gray-700">Email</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                <input type="checkbox" id="send-notification" name="send-notification" checked class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer">
+                                <label for="send-notification" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                            <span class="text-sm text-gray-700">In-App Notification</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group space-y-2">
+                        <label for="schedule-time" class="block text-sm font-medium text-gray-700">Schedule Time (Optional)</label>
+                        <input type="datetime-local" id="schedule-time" name="schedule-time" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button type="button" id="preview-btn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-eye mr-2"></i>
+                            Preview Message
+                        </button>
+                        <button type="button" id="save-template-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-save mr-2"></i>
+                            Save as Template
+                        </button>
+                    </div>
+                    
+                    <div id="message-preview" class="border border-gray-200 rounded-lg p-6 mt-6 bg-white hidden">
+                        <div class="font-semibold mb-4">Message Preview</div>
+                        <div id="preview-content"></div>
+                        <div class="flex space-x-4 mt-6">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Send Broadcast
+                            </button>
+                            <button type="button" id="cancel-preview-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <i class="fas fa-times mr-2"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="templates" class="tab-content hidden">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Message Templates</h2>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="message-card border-l-4 border-yellow-500 bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">Scheduled Maintenance Notification</div>
+                        <div class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                            Maintenance
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        Dear User,<br><br>
+                        We would like to inform you that Der-Volt will be undergoing scheduled maintenance in 2 days on {date} from {time} to {time}. During this period, you may experience temporary service interruptions.<br><br>
+                        We apologize for any inconvenience this may cause and appreciate your understanding as we work to improve our system.<br><br>
+                        Thank you for your patience.<br><br>
+                        The Der-Volt Team
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Last modified: Mar 15, 2025</div>
+                        <div class="flex space-x-2">
+                            <button class="use-template-btn px-3 py-1 bg-indigo-600 text-white rounded-md text-xs hover:bg-indigo-700">Use Template</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs hover:bg-gray-200">Edit</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="message-card border-l-4 border-green-500 bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">Maintenance Completion Notice</div>
+                        <div class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            Update
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        Dear User,<br><br>
+                        We are pleased to inform you that the scheduled maintenance has been successfully completed. All Der-Volt systems are now fully operational and you can resume your normal activities.<br><br>
+                        Thank you for your patience and understanding during this period.<br><br>
+                        The Der-Volt Team
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Last modified: Mar 15, 2025</div>
+                        <div class="flex space-x-2">
+                            <button class="use-template-btn px-3 py-1 bg-indigo-600 text-white rounded-md text-xs hover:bg-indigo-700">Use Template</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs hover:bg-gray-200">Edit</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="message-card border-l-4 border-red-500 bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">Security Alert: Phishing Attempt</div>
+                        <div class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                            Security
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        IMPORTANT SECURITY ALERT<br><br>
+                        Dear User,<br><br>
+                        We have detected a phishing attempt targeting Der-Volt users. Fraudulent emails claiming to be from Der-Volt are asking users to update their account information by clicking on suspicious links.<br><br>
+                        Please remember:<br>
+                        - Der-Volt will never ask for your password or security credentials via email<br>
+                        - Always verify the sender's email address<br>
+                        - Access your account directly through our official website or app<br>
+                        - Report any suspicious activity to our support team<br><br>
+                        Stay vigilant and secure.<br><br>
+                        The Der-Volt Security Team
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Last modified: Mar 16, 2025</div>
+                        <div class="flex space-x-2">
+                            <button class="use-template-btn px-3 py-1 bg-indigo-600 text-white rounded-md text-xs hover:bg-indigo-700">Use Template</button>
+                            <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs hover:bg-gray-200">Edit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="history" class="tab-content hidden">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Broadcast History</h2>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="message-card border-l-4 border-green-500 bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">System Upgrade Complete</div>
+                        <div class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            Update
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        Dear Users,<br><br>
+                        We're excited to announce that our system upgrade has been successfully completed. You can now enjoy improved performance and enhanced security features.<br><br>
+                        Thank you for your patience during this process.<br><br>
+                        The Der-Volt Team
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Sent: Mar 10, 2025</div>
+                        <div class="space-x-1">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">Email</span>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">In-App</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="message-card border-l-4 border-yellow-500 bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">Scheduled Maintenance Notification</div>
+                        <div class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                            Maintenance
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        Dear User,<br><br>
+                        We would like to inform you that Der-Volt will be undergoing scheduled maintenance on March 8, 2025 from 1:00 AM to 3:00 AM UTC. During this period, you may experience temporary service interruptions.<br><br>
+                        We apologize for any inconvenience this may cause and appreciate your understanding as we work to improve our system.<br><br>
+                        Thank you for your patience.<br><br>
+                        The Der-Volt Team
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Sent: Mar 6, 2025</div>
+                        <div class="space-x-1">
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">Email</span>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">In-App</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="stats" class="tab-content hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                <div class="text-3xl font-bold text-indigo-600 mb-2">94.7%</div>
+                <div class="text-sm text-gray-500">Email Delivery Rate</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                <div class="text-3xl font-bold text-indigo-600 mb-2">68.3%</div>
+                <div class="text-sm text-gray-500">Email Open Rate</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                <div class="text-3xl font-bold text-indigo-600 mb-2">82.9%</div>
+                <div class="text-sm text-gray-500">In-App Notification View Rate</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                <div class="text-3xl font-bold text-indigo-600 mb-2">24</div>
+                <div class="text-sm text-gray-500">Broadcasts This Month</div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div class="border-b border-gray-200 px-6 py-4">
+                <h2 class="text-lg font-semibold text-gray-900">Broadcast Analytics</h2>
+            </div>
+            <div class="p-6">
+                <!-- Placeholder for analytics chart -->
+                <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+                    Analytics charts would be displayed here
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Toggle switch styling */
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #68D391;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #68D391;
+    }
+    .toggle-label {
+        transition: background-color 0.3s ease;
+    }
+    
+    /* Tab styling */
+    .tab.active {
+        background-color: white;
+        color: #4F46E5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => {
+                    c.classList.add('hidden');
+                    c.classList.remove('active');
+                });
+                
+                // Add active class to selected tab and content
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.remove('hidden');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Preview message
+        const previewBtn = document.getElementById('preview-btn');
+        const messagePreview = document.getElementById('message-preview');
+        const previewContent = document.getElementById('preview-content');
+        const cancelPreviewBtn = document.getElementById('cancel-preview-btn');
+        
+        previewBtn.addEventListener('click', () => {
+            const title = document.getElementById('message-title').value || 'Untitled Message';
+            const category = document.getElementById('message-category').value;
+            const content = document.getElementById('message-content').value || 'No content provided';
+            
+            let categoryBadge = '';
+            let borderColor = '';
+            
+            if (category === 'maintenance') {
+                categoryBadge = '<span class="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Maintenance</span>';
+                borderColor = 'border-yellow-500';
+            } else if (category === 'security') {
+                categoryBadge = '<span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-medium">Security</span>';
+                borderColor = 'border-red-500';
+            } else if (category === 'update') {
+                categoryBadge = '<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">Update</span>';
+                borderColor = 'border-green-500';
+            } else {
+                categoryBadge = '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Announcement</span>';
+                borderColor = 'border-blue-500';
+            }
+            
+            const previewHtml = `
+                <div class="message-card border-l-4 ${borderColor} bg-white rounded-lg shadow-sm p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">${title}</div>
+                        <div>
+                            ${categoryBadge}
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mb-4">
+                        ${content.replace(/\n/g, '<br>')}
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <div>Preview - ${new Date().toLocaleDateString()}</div>
+                        <div class="space-x-1">
+                            ${document.getElementById('send-email').checked ? '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">Email</span>' : ''}
+                            ${document.getElementById('send-notification').checked ? '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">In-App</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            previewContent.innerHTML = previewHtml;
+            messagePreview.classList.remove('hidden');
+        });
+        
+        cancelPreviewBtn.addEventListener('click', () => {
+            messagePreview.classList.add('hidden');
+        });
+        
+        // Use template buttons
+        const useTemplateButtons = document.querySelectorAll('.use-template-btn');
+        
+        useTemplateButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const messageCard = e.target.closest('.message-card');
+                const title = messageCard.querySelector('.font-semibold').innerText;
+                const content = messageCard.querySelector('.text-sm.text-gray-600').innerHTML
+                    .replace(/<br>/g, '\n')
+                    .replace(/<br\/>/g, '\n');
+                
+                let category = 'announcement';
+                if (messageCard.classList.contains('border-yellow-500')) {
+                    category = 'maintenance';
+                } else if (messageCard.classList.contains('border-red-500')) {
+                    category = 'security';
+                } else if (messageCard.classList.contains('border-green-500')) {
+                    category = 'update';
+                }
+                
+                // Switch to create tab
+                tabs[0].click();
+                
+                // Fill in form
+                document.getElementById('message-title').value = title;
+                document.getElementById('message-category').value = category;
+                document.getElementById('message-content').value = content;
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            });
+        });
+        
+        // Save as template button
+        const saveTemplateBtn = document.getElementById('save-template-btn');
+        
+        saveTemplateBtn.addEventListener('click', () => {
+            const title = document.getElementById('message-title').value;
+            const content = document.getElementById('message-content').value;
+            
+            if (title && content) {
+                alert('Template saved successfully!');
+            } else {
+                alert('Please fill in both title and content before saving as template.');
+            }
+        });
+    });
+</script>
+{% endblock %} 
