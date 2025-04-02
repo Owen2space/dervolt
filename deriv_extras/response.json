@@ -1,0 +1,59 @@
+{
+  "authorize": {
+    "account_list": [
+      {
+        "account_category": "trading",
+        "account_type": "binary",
+        "broker": "CR",
+        "created_at": 1675775321,
+        "currency": "USD",
+        "currency_type": "fiat",
+        "is_disabled": 0,
+        "is_virtual": 0,
+        "landing_company_name": "svg",
+        "linked_to": [],
+        "loginid": "CR5056855"
+      },
+      {
+        "account_category": "trading",
+        "account_type": "binary",
+        "broker": "VRTC",
+        "created_at": 1668510429,
+        "currency": "USD",
+        "currency_type": "fiat",
+        "is_disabled": 0,
+        "is_virtual": 1,
+        "landing_company_name": "virtual",
+        "linked_to": [],
+        "loginid": "VRTC7061113"
+      }
+    ],
+    "balance": 0,
+    "country": "ke",
+    "currency": "USD",
+    "email": "owenmuchungi@gmail.com",
+    "fullname": " Owen Muchungi",
+    "is_virtual": 0,
+    "landing_company_fullname": "Deriv (SVG) LLC",
+    "landing_company_name": "svg",
+    "linked_to": [],
+    "local_currencies": {
+      "KES": {
+        "fractional_digits": 2
+      }
+    },
+    "loginid": "CR5056855",
+    "preferred_language": "EN",
+    "scopes": [
+      "admin"
+    ],
+    "upgradeable_landing_companies": [
+      "svg"
+    ],
+    "user_id": 11174032
+  },
+  "echo_req": {
+    "authorize": "<not shown>"
+  },
+  "msg_type": "authorize"
+}
