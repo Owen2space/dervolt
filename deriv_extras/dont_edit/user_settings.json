@@ -1,0 +1,55 @@
+{
+  "echo_req": {
+    "get_settings": 1
+  },
+  "get_settings": {
+    "account_opening_reason": "",
+    "address_city": "Thika",
+    "address_line_1": "01000",
+    "address_line_2": "00100",
+    "address_postcode": "01000",
+    "address_state": "200",
+    "allow_copiers": 0,
+    "calling_country_code": "254",
+    "citizen": "ke",
+    "country": "Kenya",
+    "country_code": "ke",
+    "date_of_birth": 1003536000,
+    "dxtrade_user_exception": 0,
+    "email": "owenmuchungi@gmail.com",
+    "email_consent": 1,
+    "employment_status": "",
+    "feature_flag": {
+      "wallet": 0
+    },
+    "first_name": "Owen",
+    "has_secret_answer": 1,
+    "immutable_fields": [
+      "residence"
+    ],
+    "is_authenticated_payment_agent": 0,
+    "last_name": "Muchungi",
+    "non_pep_declaration": 1,
+    "phone": "757684472",
+    "phone_number_verification": {
+      "challenge_attempts_remaining": 3,
+      "next_attempt": 1743725827,
+      "next_email_attempt": 1743725827,
+      "next_verify_attempt": 1743725827,
+      "session_timestamp": 1743725827,
+      "verified": 0,
+      "verify_attempts_remaining": 3
+    },
+    "place_of_birth": null,
+    "preferred_language": "EN",
+    "request_professional_status": 0,
+    "residence": "Kenya",
+    "salutation": "",
+    "tax_identification_number": null,
+    "tax_residence": null,
+    "tin_skipped": 0,
+    "trading_hub": 0,
+    "user_hash": "d71cfeaab17c909eb356d7838e3c163a281bd4c7c9b340de11fcde38679fbdd2"
+  },
+  "msg_type": "get_settings"
+}
