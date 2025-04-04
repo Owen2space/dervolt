@@ -76,6 +76,9 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
             country = authorize_data.get('country', '')
             currency = account.get('currency', '')
             is_virtual = str(account.get('is_virtual', False))
+            # Default values for new fields
+            password = None
+            is_active = "0"  # Set as active by default
 
             # print(is_virtual)
 
@@ -96,7 +99,7 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
             existing_user = cursor.fetchone()
             
             if existing_user:
-                # Update existing user
+                # Update existing user but preserve password and is_active values
                 cursor.execute("""
                     UPDATE users 
                     SET session_token = ?, email = ?, phone = ?, fullname = ?, balance = ?, country = ?, country_code = ?, 
@@ -105,16 +108,16 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
                 """, (session_token, email, phone_number, fullname, balance, country, country_code, currency, 
                      is_virtual, current_time, user_id, loginid))
             else:
-                # Insert new user
+                # Insert new user with default password and is_active values
                 # Generate a unique ID for the record using the generate_uid function
                 uid = generate_uid(16)
                 cursor.execute("""
                     INSERT INTO users 
                     (uid, session_token, user_id, loginid_accountid, email, phone, fullname, balance, country, country_code,
-                     currency, is_vitual, account_created, account_updated)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     currency, is_vitual, password, is_active, account_created, account_updated)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (uid, session_token, user_id, loginid, email, phone_number, fullname, balance, country, country_code,
-                     currency, is_virtual, current_time, current_time))
+                     currency, is_virtual, password, is_active, current_time, current_time))
         
         conn.commit()
         conn.close()
@@ -130,17 +133,71 @@ def get_user_by_id(user_id: str) -> Optional[Dict]:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE loginid_accountid = ?", (user_id,))
         accounts = cursor.fetchall()
         
         if not accounts:
             return None
             
-        # Convert accounts to dictionary format
-        user_accounts = [dict(account) for account in accounts]
-        conn.close()
-        
-        return {"user_id": user_id, "accounts": user_accounts}
+        return accounts
         
     except sqlite3.Error:
         return None
+
+def get_user_by_email(email: str) -> Optional[Dict]:
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        accounts = cursor.fetchall()
+        
+        if not accounts:
+            return None
+            
+        return accounts
+        
+    except sqlite3.Error:
+        return None
+
+
+def set_user_password(user_id: str, password: str) -> Tuple[bool, str]:
+    """
+    Update a user's password and set their account to active.
+    
+    Args:
+        user_id: The user's ID
+        password: The password to set
+        
+    Returns:
+        A tuple containing (success: bool, message: str)
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute("SELECT * FROM users WHERE loginid_accountid = ?", (user_id,))
+        existing_user = cursor.fetchone()
+        
+        if not existing_user:
+            conn.close()
+            return False, f"User with ID {user_id} not found"
+        
+        # Update password and set account as active
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute("""
+            UPDATE users
+            SET password = ?, is_active = ?, account_updated = ?
+            WHERE loginid_accountid = ?
+        """, (password, "1", current_time, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return True, "Password updated successfully"
+        
+    except sqlite3.Error as e:
+        return False, f"Database error: {str(e)}"
+    except Exception as e:
+        return False, f"Error updating password: {str(e)}"

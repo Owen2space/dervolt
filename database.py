@@ -3,8 +3,26 @@ import os
 import traceback
 from contextlib import contextmanager
 from datetime import datetime
+import uuid
 
 DATABASE_URL = "der_volt.db"
+
+def generate_uid(length=16):
+    """
+    Generate a unique identifier with the specified length.
+    
+    Args:
+        length: Length of the UID to generate (default: 16)
+        
+    Returns:
+        A string containing a random UUID truncated to the specified length
+    """
+    # Generate a random UUID and convert to string
+    random_uuid = str(uuid.uuid4())
+    
+    # Remove hyphens and truncate to desired length
+    clean_uuid = random_uuid.replace('-', '')
+    return clean_uuid[:length]
 
 def create_tables():
     """Create all required tables if they don't exist."""
@@ -12,30 +30,45 @@ def create_tables():
         with get_db() as conn:
             cursor = conn.cursor()
             
-            # Create users table
+            # Create users table - both standard and Deriv OAuth users
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                first_name TEXT NOT NULL,
-                last_name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
+                uid TEXT UNIQUE,
+                user_id TEXT UNIQUE,
+                first_name TEXT,
+                last_name TEXT,
+                fullname TEXT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
                 phone_number TEXT,
+                country TEXT,
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                updated_at TEXT NOT NULL,
+                oauth_provider TEXT,
+                is_oauth_user INTEGER DEFAULT 0,
+                is_active INTEGER DEFAULT 1,
+                blocked_reason TEXT,
+                blocked_at TEXT
             )
             ''')
             
-            # Create accounts table
+            # Create accounts table - standard accounts
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS accounts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                account_number TEXT UNIQUE NOT NULL,
-                account_name TEXT NOT NULL,
-                account_type TEXT NOT NULL,
-                currency TEXT NOT NULL,
-                status TEXT NOT NULL,
+                uid TEXT UNIQUE,
+                user_id INTEGER,
+                deriv_id TEXT,
+                account_number TEXT UNIQUE,
+                loginid TEXT,
+                account_name TEXT,
+                account_type TEXT,
+                currency TEXT,
+                balance TEXT,
+                is_virtual TEXT,
+                status TEXT,
+                is_active INTEGER DEFAULT 1,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users (id)
@@ -248,7 +281,8 @@ def create_tables():
             
             # Check if we need to insert initial forex rate
             cursor.execute("SELECT COUNT(*) FROM forex_rates WHERE currency='USD/KES'")
-            if cursor.fetchone()[0] == 0:
+            count_result = cursor.fetchone()
+            if count_result['COUNT(*)'] == 0:
                 # Insert default value until API provides real rate
                 cursor.execute('''
                     INSERT INTO forex_rates (currency, rate, updated_at)
@@ -256,128 +290,226 @@ def create_tables():
                 ''', ('USD/KES', 130.0, datetime.now()))
                 print("Added initial USD/KES forex rate")
             
+            # Create indexes for deriv tables
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_deriv_user_id ON users(user_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_accounts_deriv_id ON accounts(deriv_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_accounts_loginid ON accounts(loginid)")
+            
             conn.commit()
             print("Database tables created successfully")
+            return True
     except Exception as e:
         print(f"Error creating tables: {e}")
         traceback.print_exc()
+        return False
 
 @contextmanager
 def get_db():
-    """Context manager for database connections"""
-    # Use the database file directly in the backend directory
-    db_path = os.path.join(os.path.dirname(__file__), 'der_volt.db')
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+    """Get database connection with context manager."""
+    conn = None
     try:
+        conn = sqlite3.connect(DATABASE_URL)
+        conn.row_factory = dict_factory
+        conn.execute("PRAGMA foreign_keys = ON")
         yield conn
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def dict_factory(cursor, row):
-    """Convert database rows to dictionaries"""
-    fields = [column[0] for column in cursor.description]
-    return {key: value for key, value in zip(fields, row)}
+    """Convert database row objects to dictionary."""
+    return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
 def get_db_connection():
-    """Get a database connection with dictionary row factory"""
-    db_path = os.path.join(os.path.dirname(__file__), 'der_volt.db')
-    conn = sqlite3.connect(db_path)
+    """Get a database connection."""
+    conn = sqlite3.connect(DATABASE_URL)
     conn.row_factory = dict_factory
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 def init_db():
-    """Initialize the database and create tables."""
-    try:
-        create_tables()
+    """Initialize the database."""
+    if not os.path.exists(DATABASE_URL):
+        # Create database if it doesn't exist
+        conn = sqlite3.connect(DATABASE_URL)
+        conn.close()
+        print(f"Created database: {DATABASE_URL}")
+    
+    success = create_tables()
+    return success
+
+# Helper functions for Deriv OAuth integration
+
+def get_deriv_user_by_id(deriv_user_id):
+    """
+    Get a user by their Deriv user ID.
+    
+    Args:
+        deriv_user_id: The Deriv user ID to look up
         
-        # Add any additional columns needed
+    Returns:
+        User data dictionary or None if not found
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE user_id = ?", (deriv_user_id,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return None
+                
+            # Get all accounts for this user
+            cursor.execute("SELECT * FROM accounts WHERE user_id = ?", (user['id'],))
+            accounts = cursor.fetchall()
+            
+            # Add accounts to user data
+            user['accounts'] = accounts
+            
+            return user
+            
+    except Exception as e:
+        print(f"Error getting Deriv user: {e}")
+        return None
+
+def save_deriv_user(user_data):
+    """
+    Save a Deriv user to the database.
+    
+    Args:
+        user_data: Dictionary containing user data from Deriv API
+        
+    Returns:
+        Tuple of (success: bool, user_id: int or None, message: str)
+    """
+    try:
         with get_db() as conn:
             cursor = conn.cursor()
             
-            # Check if preferred_payment_method column exists in users table
-            cursor.execute("PRAGMA table_info(users)")
-            columns = [column[1] for column in cursor.fetchall()]
+            # Extract data
+            authorize_data = user_data.get('authorize', {})
+            deriv_user_id = authorize_data.get('user_id')
             
-            if 'preferred_payment_method' not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN preferred_payment_method TEXT DEFAULT 'mpesa'")
-                print("Added preferred_payment_method column to users table")
-            
-            # Check if is_default column exists in accounts table
-            cursor.execute("PRAGMA table_info(accounts)")
-            account_columns = [column[1] for column in cursor.fetchall()]
-            
-            if 'is_default' not in account_columns:
-                cursor.execute("ALTER TABLE accounts ADD COLUMN is_default INTEGER DEFAULT 0")
-                print("Added is_default column to accounts table")
+            if not deriv_user_id:
+                return False, None, "User ID not found in data"
                 
-                # Set the first account for each user as default
+            # Check if user exists
+            cursor.execute("SELECT * FROM users WHERE user_id = ?", (deriv_user_id,))
+            existing_user = cursor.fetchone()
+            
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            if existing_user:
+                # Update existing user
                 cursor.execute("""
-                    WITH RankedAccounts AS (
-                        SELECT id, user_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY id) as rn
-                        FROM accounts
-                    )
-                    UPDATE accounts SET is_default = 1
-                    WHERE id IN (SELECT id FROM RankedAccounts WHERE rn = 1)
-                """)
-                print("Set default accounts for each user")
-            
-            # Check if blocked_reason and blocked_at columns exist in users table
-            if 'blocked_reason' not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN blocked_reason TEXT")
-                print("Added blocked_reason column to users table")
-            
-            if 'blocked_at' not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN blocked_at TEXT")
-                print("Added blocked_at column to users table")
+                    UPDATE users SET 
+                    email = ?, 
+                    fullname = ?, 
+                    country = ?,
+                    updated_at = ?,
+                    is_oauth_user = 1,
+                    oauth_provider = 'deriv'
+                    WHERE id = ?
+                """, (
+                    authorize_data.get('email', ''),
+                    authorize_data.get('fullname', ''),
+                    authorize_data.get('country', ''),
+                    current_time,
+                    existing_user['id']
+                ))
                 
-            # Check if is_active column exists in users table
-            if 'is_active' not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1")
-                print("Added is_active column to users table")
-                
-            # Check if password_reset_required column exists in users table
-            if 'password_reset_required' not in columns:
-                cursor.execute("ALTER TABLE users ADD COLUMN password_reset_required INTEGER DEFAULT 0")
-                print("Added password_reset_required column to users table")
-            
-            # Check if details column exists in user_activity_logs table
-            cursor.execute("PRAGMA table_info(user_activity_logs)")
-            activity_log_columns = [column[1] for column in cursor.fetchall()]
-            
-            if 'details' not in activity_log_columns:
-                cursor.execute("ALTER TABLE user_activity_logs ADD COLUMN details TEXT")
-                print("Added details column to user_activity_logs table")
-            
-            # Check if metadata column exists in transactions table
-            cursor.execute("PRAGMA table_info(transactions)")
-            transaction_columns = [column[1] for column in cursor.fetchall()]
-            
-            if 'metadata' not in transaction_columns:
-                cursor.execute("ALTER TABLE transactions ADD COLUMN metadata TEXT")
-                print("Added metadata column to transactions table")
-                
-            # Check if user_id column exists in transactions table
-            if 'user_id' not in transaction_columns:
-                cursor.execute("ALTER TABLE transactions ADD COLUMN user_id INTEGER")
-                print("Added user_id column to transactions table")
-                
-                # Populate user_id column based on account_id
+                user_id = existing_user['id']
+                uid = existing_user['uid']
+            else:
+                # Insert new user
+                uid = generate_uid(16)
                 cursor.execute("""
-                    UPDATE transactions 
-                    SET user_id = (
-                        SELECT user_id FROM accounts 
-                        WHERE accounts.id = transactions.account_id
-                    )
-                """)
-                print("Populated user_id column in transactions table")
+                    INSERT INTO users (
+                        uid, user_id, email, fullname, country, 
+                        created_at, updated_at, is_oauth_user, oauth_provider
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'deriv')
+                """, (
+                    uid,
+                    deriv_user_id,
+                    authorize_data.get('email', ''),
+                    authorize_data.get('fullname', ''),
+                    authorize_data.get('country', ''),
+                    current_time,
+                    current_time
+                ))
+                
+                # Get the id of the newly inserted user
+                cursor.execute("SELECT id FROM users WHERE user_id = ?", (deriv_user_id,))
+                user = cursor.fetchone()
+                if user:
+                    user_id = user['id']
+                else:
+                    return False, None, "Failed to retrieve user ID after insert"
+            
+            # Process accounts
+            account_list = authorize_data.get('account_list', [])
+            for account in account_list:
+                loginid = account.get('loginid')
+                
+                # Check if account exists
+                cursor.execute("""
+                    SELECT * FROM accounts 
+                    WHERE user_id = ? AND loginid = ?
+                """, (user_id, loginid))
+                
+                existing_account = cursor.fetchone()
+                
+                if existing_account:
+                    # Update existing account
+                    cursor.execute("""
+                        UPDATE accounts SET
+                        balance = ?,
+                        currency = ?,
+                        is_virtual = ?,
+                        updated_at = ?
+                        WHERE id = ?
+                    """, (
+                        account.get('balance', '0'),
+                        account.get('currency', ''),
+                        str(account.get('is_virtual', False)),
+                        current_time,
+                        existing_account['id']
+                    ))
+                else:
+                    # Insert new account
+                    account_uid = generate_uid(16)
+                    account_number = f"DR{generate_uid(10)}"
+                    
+                    cursor.execute("""
+                        INSERT INTO accounts (
+                            uid, user_id, deriv_id, loginid,
+                            account_number, account_name, account_type,
+                            balance, currency, is_virtual,
+                            status, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        account_uid,
+                        user_id,
+                        deriv_user_id,
+                        loginid,
+                        account_number,
+                        f"Deriv {loginid}",
+                        "deriv",
+                        account.get('balance', '0'),
+                        account.get('currency', ''),
+                        str(account.get('is_virtual', False)),
+                        "active",
+                        current_time,
+                        current_time
+                    ))
             
             conn.commit()
-        
-        print("Database initialized successfully")
+            return True, user_id, "User saved successfully"
+            
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        print(f"Error saving Deriv user: {e}")
         traceback.print_exc()
+        return False, None, str(e)
 
 #initialize the database
 if __name__ == "__main__":

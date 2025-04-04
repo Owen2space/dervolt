@@ -1,89 +1,125 @@
 import sqlite3
-from database import get_db
+import os
+from datetime import datetime
 
-def update_accounts_table():
-    """
-    Updates the accounts table to include the account_name column if it doesn't exist.
-    This script should be run once to fix the database schema.
-    """
-    print("Updating accounts table to include account_name column...")
+# Database file
+DB_FILE = "der_volt.db"
+
+def backup_database():
+    """Create a backup of the database before making changes"""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_file = f"der_volt_backup_{timestamp}.db"
+    
+    if not os.path.exists(DB_FILE):
+        print(f"Database file {DB_FILE} not found.")
+        return False
     
     try:
-        with get_db() as db:
-            cursor = db.cursor()
-            
-            # Check if account_name column exists
-            cursor.execute("PRAGMA table_info(accounts)")
-            columns = [column[1] for column in cursor.fetchall()]
-            
-            if "account_name" not in columns:
-                print("account_name column not found, adding it now...")
-                
-                try:
-                    # Try to add the column to the existing table
-                    cursor.execute("ALTER TABLE accounts ADD COLUMN account_name TEXT NOT NULL DEFAULT 'Default Account'")
-                    db.commit()
-                    print("Successfully added account_name column to accounts table.")
-                    
-                    # Update existing accounts with a name based on account number
-                    cursor.execute("UPDATE accounts SET account_name = 'Account ' || substr(account_number, -4) WHERE account_name = 'Default Account'")
-                    db.commit()
-                    print("Updated existing accounts with names based on account numbers.")
-                    
-                except sqlite3.OperationalError as e:
-                    print(f"Error adding column: {e}")
-                    print("Attempting to recreate accounts table with correct schema...")
-                    
-                    # Backup existing accounts data
-                    cursor.execute("SELECT id, user_id, account_number, account_type, balance, currency, is_active, created_at, updated_at FROM accounts")
-                    existing_accounts = cursor.fetchall()
-                    
-                    # Create a temporary table with the correct schema
-                    cursor.execute('''
-                    CREATE TABLE accounts_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
-                        account_number TEXT UNIQUE NOT NULL,
-                        account_name TEXT NOT NULL DEFAULT 'Default Account',
-                        account_type TEXT DEFAULT 'real',
-                        balance REAL DEFAULT 0.0,
-                        currency TEXT DEFAULT 'USD',
-                        is_active INTEGER DEFAULT 1,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users (id)
-                    )
-                    ''')
-                    
-                    # Insert existing data into the new table
-                    for account in existing_accounts:
-                        account_name = f"Account {account['account_number'][-4:]}"
-                        cursor.execute('''
-                        INSERT INTO accounts_new (id, user_id, account_number, account_name, account_type, balance, currency, is_active, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (
-                            account['id'], 
-                            account['user_id'], 
-                            account['account_number'], 
-                            account_name,
-                            account['account_type'], 
-                            account['balance'], 
-                            account['currency'], 
-                            account['is_active'], 
-                            account['created_at'], 
-                            account['updated_at']
-                        ))
-                    
-                    # Replace the old table with the new one
-                    cursor.execute("DROP TABLE accounts")
-                    cursor.execute("ALTER TABLE accounts_new RENAME TO accounts")
-                    db.commit()
-                    print("Successfully recreated accounts table with account_name column.")
-            else:
-                print("account_name column already exists in accounts table.")
-    
+        # Connect to the database
+        conn = sqlite3.connect(DB_FILE)
+        
+        # Back up to a new database file
+        backup_conn = sqlite3.connect(backup_file)
+        conn.backup(backup_conn)
+        
+        # Close connections
+        backup_conn.close()
+        conn.close()
+        
+        print(f"Database backed up to {backup_file}")
+        return True
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Backup failed: {e}")
+        return False
+
+def inspect_accounts_table():
+    """Inspect the accounts table structure"""
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        # Check if accounts table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'")
+        if not cursor.fetchone():
+            print("Accounts table does not exist yet.")
+            conn.close()
+            return False
+        
+        # Get table schema
+        cursor.execute("PRAGMA table_info(accounts)")
+        columns = cursor.fetchall()
+        
+        print("Current accounts table columns:")
+        column_names = [column[1] for column in columns]
+        print(column_names)
+        
+        conn.close()
+        return column_names
+    except Exception as e:
+        print(f"Error inspecting accounts table: {e}")
+        return []
+
+def update_accounts_table():
+    """Add required columns to the accounts table"""
+    try:
+        # First check if the table exists and get its structure
+        columns = inspect_accounts_table()
+        if not columns:
+            print("Cannot update accounts table - it doesn't exist or cannot be accessed.")
+            return False
+        
+        # Connect to the database
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        changes_made = False
+        
+        # Add account_number if needed
+        if 'account_number' not in columns:
+            print("Adding account_number column to accounts table...")
+            cursor.execute("ALTER TABLE accounts ADD COLUMN account_number TEXT")
+            changes_made = True
+        
+        # Add account_name if needed
+        if 'account_name' not in columns:
+            print("Adding account_name column to accounts table...")
+            cursor.execute("ALTER TABLE accounts ADD COLUMN account_name TEXT")
+            changes_made = True
+            
+        # Add account_type if needed
+        if 'account_type' not in columns:
+            print("Adding account_type column to accounts table...")
+            cursor.execute("ALTER TABLE accounts ADD COLUMN account_type TEXT")
+            changes_made = True
+            
+        # Add status if needed
+        if 'status' not in columns:
+            print("Adding status column to accounts table...")
+            cursor.execute("ALTER TABLE accounts ADD COLUMN status TEXT DEFAULT 'active'")
+            changes_made = True
+        
+        if changes_made:
+            # Commit changes
+            conn.commit()
+            print("Accounts table updated successfully.")
+        else:
+            print("No changes needed for accounts table.")
+        
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error updating accounts table: {e}")
+        return False
 
 if __name__ == "__main__":
-    update_accounts_table() 
+    print("Starting accounts table update...")
+    
+    # First back up the database
+    if backup_database():
+        # Then update the accounts table
+        update_accounts_table()
+    else:
+        print("Database update aborted.")
+    
+    print("Accounts table update process completed.") 

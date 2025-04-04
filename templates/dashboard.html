@@ -415,7 +415,7 @@
                         <div>
                             <h2 class="text-lg font-medium text-white">Available Balance - <span id="selectedAccountName">{{ accounts[0].account_name if accounts else 'Default Account' }}</span></h2>
                             <p class="text-4xl font-bold mt-2 text-white" id="mainBalanceDisplay">
-                                ${{ '%.2f'|format(accounts[0].balance) if accounts else '0.00' }}
+                                ${{ '%.2f'|format(accounts[0].balance|to_float) if accounts else '0.00' }}
                             </p>
                             <p class="text-sm text-white/80 mt-1">Last updated: <span id="topLastUpdated">
                                 {% if now is defined and now is not string and now is not none %}
@@ -445,7 +445,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Select Account</label>
                                 <select id="depositAccountSelector" class="account-selector w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800">
                                     {% for account in accounts %}
-                                    <option value="{{ account.id }}">{{ account.account_name }} ({{ account.account_number[-4:] }}) - ${{ "%.2f"|format(account.balance) }}</option>
+                                    <option value="{{ account.id }}">{{ account.account_name if account.account_name else 'Deriv ' + account.loginid }} ({{ account.loginid }}) - ${{ "%.2f"|format(account.balance|to_float) }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -507,7 +507,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">From Account</label>
                                 <select id="withdrawAccountSelector" class="account-selector w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800">
                                     {% for account in accounts %}
-                                    <option value="{{ account.id }}">{{ account.account_name }} ({{ account.account_number[-4:] }}) - ${{ "%.2f"|format(account.balance) }}</option>
+                                    <option value="{{ account.id }}">{{ account.account_name if account.account_name else 'Deriv ' + account.loginid }} ({{ account.loginid }}) - ${{ "%.2f"|format(account.balance|to_float) }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -569,7 +569,7 @@
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <div class="text-sm text-gray-600 mb-1">Available Balance</div>
                             <div class="text-3xl font-bold text-gray-900 mb-2" id="accountBalance">
-                                ${{ '%.2f'|format(accounts[0].balance) if accounts else '0.00' }}
+                                ${{ '%.2f'|format(accounts[0].balance|to_float) if accounts else '0.00' }}
                             </div>
                             <div class="text-xs text-gray-500">Last updated: <span id="lastUpdated">
                                 {% if now is defined and now is not string and now is not none %}
@@ -902,15 +902,15 @@
                 updateAccountDropdownOptions();
                 
                 // Add a message showing which account is being displayed
-                const accountName = account.account_name;
-                const accountNumber = account.account_number;
+                const accountName = account.account_name || 'Deriv ' + account.loginid;
+                const accountIdentifier = account.loginid;
                 
                 // Update account info in the account header
                 const balanceHeader = document.querySelector('.bg-gradient-to-r h2');
                 const balanceSubtext = document.querySelector('.text-sm.mt-1[class*="text-white"]');
                 
                 if (balanceSubtext && document.getElementById('topLastUpdated')) {
-                    balanceSubtext.innerHTML = `Last updated: <span id="topLastUpdated">${document.getElementById('topLastUpdated').textContent}</span><br>Account #: ${accountNumber.slice(-4)}`;
+                    balanceSubtext.innerHTML = `Last updated: <span id="topLastUpdated">${document.getElementById('topLastUpdated').textContent}</span><br>Account #: ${accountIdentifier}`;
                 }
                 
                 console.log('Account display updated to:', accountName, 'with balance:', selectedAccountBalance);
@@ -929,7 +929,7 @@
                         const account = accounts.find(acc => acc.id === optionAccountId);
                         if (account) {
                             // Update the option text to include the current balance
-                            option.text = `${account.account_name} (${account.account_number.slice(-4)}) - $${parseFloat(account.balance).toFixed(2)}`;
+                            option.text = `${account.account_name || 'Deriv ' + account.loginid} (${account.loginid}) - $${parseFloat(account.balance).toFixed(2)}`;
                         }
                     });
                 });

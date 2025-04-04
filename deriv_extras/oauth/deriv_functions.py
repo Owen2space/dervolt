@@ -3,13 +3,9 @@ import json
 import ssl  # Might be needed depending on system SSL setup
 from urllib.parse import urlparse, parse_qs
 
-# --- Configuration ---
-APP_ID = 70837  # Replace with YOUR actual App ID (1089 is for testing/docs)
-DERIV_WS_URL = f"wss://ws.derivws.com/websockets/v3?app_id={APP_ID}"
-# This is the token you received from the OAuth flow for the specific user
 
-
-def fetch_deriv_user_info(session_token):
+def fetch_deriv_user_info(session_token, app_id):
+    DERIV_WS_URL = f"wss://ws.derivws.com/websockets/v3?app_id={app_id}"
     ws = None
     try:
         ws = websocket.create_connection(DERIV_WS_URL, sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -51,7 +47,53 @@ def fetch_deriv_user_info(session_token):
         if ws and ws.connected:
             ws.close()
 
-def extract_tokens_from_url(url_string: str) -> str | None:
+def extract_tokens_from_url(url_string: str):
+    """
+    Extract account and token information from a Deriv OAuth redirect URL
+    
+    Args:
+        url_string: The URL or query string to parse
+        
+    Returns:
+        A list of tuples containing (account_id, token, currency) for each account
+    """
+    try:
+        # If this is a full URL, extract just the query part
+        if '?' in url_string:
+            url_string = url_string.split('?', 1)[1]
+            
+        # Parse the query string into a dictionary
+        if not url_string:
+            return []
+            
+        # Split by & to get key-value pairs
+        params = {}
+        for pair in url_string.split('&'):
+            if '=' in pair:
+                key, value = pair.split('=', 1)
+                params[key] = value
+        
+        # Extract accounts and tokens
+        accounts = []
+        
+        # Look for acct1, token1, cur1, etc.
+        index = 1
+        while f'acct{index}' in params and f'token{index}' in params:
+            account = params.get(f'acct{index}')
+            token = params.get(f'token{index}')
+            currency = params.get(f'cur{index}', 'USD')  # Default to USD if not specified
+            
+            if account and token:
+                accounts.append((account, token, currency))
+                
+            index += 1
+            
+        return accounts
+    except Exception as e:
+        print(f"Error processing URL: {e}")
+        return []
+    
+def extract_tokens_from_url_1(url_string: str) -> str | None:
     try:
         # Parse the URL into its components
         parsed_url = urlparse(url_string)

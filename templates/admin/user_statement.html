@@ -149,7 +149,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                ${{ '%.2f'|format(account.balance) }}
+                                ${{ '%.2f'|format(account.balance|to_float) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full 

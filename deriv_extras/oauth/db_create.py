@@ -7,23 +7,20 @@ conn = sqlite3.connect(db_name)
 cursor = conn.cursor()
 # uid, user_id, loginid, email, fullname, balance, country, currency, is_vitual, account_created, account_updated
 
+# Drop existing table if needed
+# cursor.execute("DROP TABLE IF EXISTS users")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     uid TEXT NOT NULL,
-    session_token TEXT NOT NULL,
     user_id TEXT NOT NULL,
     loginid_accountid TEXT NOT NULL,
-    password TEXT,
     email TEXT,
-    phone TEXT,
     fullname TEXT,
     balance TEXT,
     country TEXT,
-    country_code TEXT,
     currency TEXT,
     is_vitual TEXT,
-    is_active TEXT,
     account_created TEXT,
     account_updated TEXT
 )

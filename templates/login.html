@@ -187,15 +187,19 @@
                             </div>
                         </div>
 
-                        <div class="mt-6 grid grid-cols-2 gap-4">
-                            <button class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                                <img src="assets/google-icon.svg" alt="Google" class="h-5 w-5 mr-2">
+                        <div class="mt-6 grid grid-cols-3 gap-3">
+                            <a href="#" class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                                <img src="{{ url_for('static', filename='assets/google-icon.svg') }}" alt="Google" class="h-5 w-5 mr-2">
                                 Google
-                            </button>
-                            <button class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                                <img src="assets/apple-icon.svg" alt="Apple" class="h-5 w-5 mr-2">
+                            </a>
+                            <a href="#" class="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                                <img src="{{ url_for('static', filename='assets/apple-icon.svg') }}" alt="Apple" class="h-5 w-5 mr-2">
                                 Apple
-                            </button>
+                            </a>
+                            <a href="{{ deriv_oauth_url }}" class="flex items-center justify-center px-4 py-2 border border-orange-300 bg-orange-50 rounded-lg hover:bg-orange-100 transition">
+                                <img src="{{ url_for('static', filename='assets/deriv-icon.png') }}" alt="Deriv" class="h-5 w-5 mr-2">
+                                Deriv
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, make_response, flash, abort, g, Response, send_from_directory, send_file
 import sqlite3
-from database import get_db, create_tables, init_db
+from database import get_db, create_tables, init_db, get_deriv_user_by_id, save_deriv_user
 import json
 from datetime import datetime, timedelta
 import uuid
@@ -20,7 +20,6 @@ import string
 import time
 import threading
 import logging
-# import markdown  # Removed unused import
 from io import BytesIO
 import base64
 from email_helpers import send_password_reset_email
@@ -29,6 +28,11 @@ from forex_utils import fetch_forex_rate, get_latest_forex_rate, calculate_depos
 # Import scheduler
 import scheduler
 from werkzeug.utils import secure_filename
+
+# Import Deriv OAuth functions
+import requests
+from deriv_extras.oauth.deriv_functions import fetch_deriv_user_info, extract_tokens_from_url
+from deriv_extras.oauth.config import app_id, deriv_oauth_url
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -81,11 +85,28 @@ def process_date_fields(row_dict, date_fields=None):
             
     return row_dict
 
+# Add generate_uid function at the top
+def generate_uid(length=16):
+    """Generate a random unique identifier of specified length"""
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
 app = Flask(__name__,
     template_folder='templates',    # Look for templates in backend/templates
     static_folder='static'         # Look for static files in backend/static
 )
-app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key')
+# Set up session with secure flags
+app.secret_key = os.getenv('SECRET_KEY', os.urandom(24).hex())
+app.config['SESSION_COOKIE_SECURE'] = True  # For HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Session expiration
+
+# Set FLASK_ENV for development features
+app.config['FLASK_ENV'] = 'development'  # Change to 'production' for production environments
+
+# Set up session encryption
+app.config['SESSION_USE_SIGNER'] = True
 
 # Add built-in functions to Jinja2 environment
 app.jinja_env.globals.update(min=min, max=max)
@@ -93,12 +114,20 @@ app.jinja_env.globals.update(min=min, max=max)
 # Add custom fromjson filter to parse JSON strings
 @app.template_filter('fromjson')
 def fromjson_filter(value):
-    """Convert a JSON string to a Python object"""
+    """Load a string as JSON and return the result"""
     try:
         return json.loads(value)
     except (ValueError, TypeError):
-        # Return empty dict if parsing fails
         return {}
+
+# Template filter to ensure balance is treated as a float
+@app.template_filter('to_float')
+def to_float_filter(value):
+    """Convert a string or any value to float for safe formatting"""
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.0
 
 # Direct transaction data API endpoint for debugging
 @app.route('/api/transactions-debug')
@@ -441,6 +470,11 @@ def index():
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Special handling for Deriv OAuth callback
+        if request.path == '/dashboard' and request.args.get('acct1') and request.args.get('token1'):
+            # Allow processing of OAuth callback without requiring login
+            return f(*args, **kwargs)
+            
         if 'user_id' not in session:
             session.clear()
             response = make_response(redirect(url_for('login')))
@@ -452,55 +486,88 @@ def login_required(f):
             response.set_cookie('session', '', expires=0)
             return response
 
-        # Check if user is blocked
+        # Check if user is blocked or exists
         try:
             user_id = session.get('user_id')
             with get_db() as db:
                 cursor = db.cursor()
-                cursor.execute("SELECT is_active, blocked_reason FROM users WHERE id = ?", (user_id,))
+                
+                # First check if the user exists at all
+                cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
                 user = cursor.fetchone()
                 
                 if not user:
-                    # User doesn't exist anymore
-                    session.clear()
-                    flash('Account not found', 'error')
-                    response = make_response(redirect(url_for('login')))
-                    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-                    response.headers['Pragma'] = 'no-cache'
-                    response.headers['Expires'] = '0'
-                    response.set_cookie('session', '', expires=0)
-                    return response
-                    
-                # Convert to dict to safely access fields
-                user_dict = dict(user)
-                
-                # Check if user is blocked (is_active = 0)
-                if user_dict.get('is_active') == 0:
-                    # User is blocked
-                    session.clear()
-                    
-                    # Get block reason and date
-                    blocked_reason = user_dict.get('blocked_reason')
-                    blocked_at = user_dict.get('blocked_at')
-                    
-                    # Construct a more detailed block message
-                    if blocked_reason:
-                        blocked_message = f"Access Denied: {blocked_reason}"
-                        if blocked_at:
-                            blocked_message += f" (Blocked on: {blocked_at})"
+                    # If this is a test user ID and we're in development mode, create a test user
+                    if user_id == 4 and app.config.get('FLASK_ENV') == 'development':
+                        try:
+                            # Create a test user if it doesn't exist
+                            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            cursor.execute("""
+                                INSERT INTO users (
+                                    id, uid, user_id, email, fullname, 
+                                    is_active, created_at, updated_at
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            """, (
+                                4,
+                                generate_uid(16),
+                                'test_user',
+                                'testuser@example.com',
+                                'Test User',
+                                1,
+                                current_time,
+                                current_time
+                            ))
+                            db.commit()
+                            print("Created test user with ID 4")
+                        except Exception as e:
+                            print(f"Could not create test user: {e}")
+                            # Just clean up the session and redirect to login
+                            session.clear()
+                            return redirect(url_for('login'))
                     else:
-                        blocked_message = "Your account has been blocked for violating our policies. Please contact support."
-                    
-                    flash(blocked_message, 'error')
-                    response = make_response(redirect(url_for('login')))
-                    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-                    response.headers['Pragma'] = 'no-cache'
-                    response.headers['Expires'] = '0'
-                    response.set_cookie('session', '', expires=0)
-                    return response
+                        # User doesn't exist anymore
+                        session.clear()
+                        flash('Account not found', 'error')
+                        response = make_response(redirect(url_for('login')))
+                        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+                        response.headers['Pragma'] = 'no-cache'
+                        response.headers['Expires'] = '0'
+                        response.set_cookie('session', '', expires=0)
+                        return response
+                
+                # Now that we know the user exists, check if is_active field exists and user is active
+                try:
+                    is_active = user.get('is_active')
+                    if is_active is not None and is_active == 0:
+                        # User is blocked
+                        session.clear()
+                        
+                        # Get block reason and date
+                        blocked_reason = user.get('blocked_reason')
+                        blocked_at = user.get('blocked_at')
+                        
+                        # Construct a more detailed block message
+                        if blocked_reason:
+                            blocked_message = f"Access Denied: {blocked_reason}"
+                            if blocked_at:
+                                blocked_message += f" (Blocked on: {blocked_at})"
+                        else:
+                            blocked_message = "Your account has been blocked for violating our policies. Please contact support."
+                        
+                        flash(blocked_message, 'error')
+                        response = make_response(redirect(url_for('login')))
+                        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+                        response.headers['Pragma'] = 'no-cache'
+                        response.headers['Expires'] = '0'
+                        response.set_cookie('session', '', expires=0)
+                        return response
+                except Exception as e:
+                    print(f"Could not check is_active status: {e}")
+                    # If we can't check is_active, allow the user to proceed
+                    # This is a fallback to prevent complete system lockout
         except Exception as e:
-            print(f"Error checking user active status: {e}")
-            # In case of error, still allow the user to proceed
+            print(f"Error in login_required: {e}")
+            # In case of any error, still allow the user to proceed
             # This is a fallback to prevent complete system lockout
 
         # Add cache control headers to all authenticated responses
@@ -527,265 +594,218 @@ def dashboard():
     """
     Render the dashboard with user data, accounts, transactions and notifications.
     """
-    current_user_id = session.get('user_id')
-
-    try:
-        # Connect to the database
-        with get_db() as db:
-            cursor = db.cursor()
-
-            # Fetch user data
-            cursor.execute("SELECT * FROM users WHERE id = ?", (current_user_id,))
-            user = cursor.fetchone()
-
-            if not user:
-                session.clear()
+    # Check if this is a Deriv OAuth callback
+    acct1 = request.args.get('acct1')
+    token1 = request.args.get('token1')
+    
+    # If these are present, this is a Deriv OAuth redirect
+    if acct1 and token1:
+        from deriv_extras.oauth.deriv_functions import fetch_deriv_user_info
+        from deriv_extras.oauth.config import app_id
+        from deriv_extras.oauth.db_functions import save_user_info, get_user_by_id
+        import json
+        
+        print(f"Processing Deriv OAuth callback for account: {acct1}")
+        
+        # Use the provided token to get user data - pass token1 as the session token
+        success, user_data = fetch_deriv_user_info(token1, app_id)
+        
+        if success:
+            print("Successfully fetched user data from Deriv API")
+            # Process user data
+            user_data_dict = json.loads(user_data)
+            authorize_data = user_data_dict.get('authorize', {})
+            user_id = authorize_data.get('user_id')
+            
+            if not user_id:
+                print("Error: User ID not found in Deriv API response")
+                flash("Authentication failed: User ID not found in data", "error")
                 return redirect(url_for('login'))
-
-            # Fetch user accounts
-            cursor.execute("""
-                SELECT a.*, 
-                COALESCE((SELECT SUM(amount) FROM transactions 
-                WHERE account_id = a.id AND transaction_type = 'deposit' AND status = 'completed'), 0) -
-                COALESCE((SELECT SUM(amount) FROM transactions 
-                WHERE account_id = a.id AND transaction_type = 'withdrawal' AND status = 'completed'), 0) as balance
-                FROM accounts a
-                WHERE a.user_id = ?
-
-
-            """, (current_user_id,))
-            accounts = cursor.fetchall()
-
-            # If no accounts, create a default one
-            if not accounts:
-                account_number = generate_account_number()
-                cursor.execute("""
-                    INSERT INTO accounts (user_id, account_number, account_name, account_type, currency, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?)
-
-
-                """, (current_user_id, account_number, "Default Account", "standard", "USD", 1))
-                db.commit()
-
-                # Fetch the newly created account
-                cursor.execute("""
-                    SELECT a.*, 0 as balance
-                    FROM accounts a
-                    WHERE a.id = last_insert_rowid()
-
-
-                """)
-                accounts = cursor.fetchall()
-
-            # Fetch recent transactions
-            cursor.execute("""
-                SELECT t.*, a.account_number 
-                FROM transactions t
-                JOIN accounts a ON t.account_id = a.id
-                WHERE a.user_id = ?
-                ORDER BY t.created_at DESC
-                LIMIT 10
-
-
-            """, (current_user_id,))
-            transactions = cursor.fetchall()
             
-            # Process all transactions to ensure date fields are datetime objects
-            processed_transactions = []
-            for transaction in transactions:
-                # Convert the Row object to a dictionary
-                transaction_dict = dict(transaction)
-                # Process all date fields
-                processed_transaction = process_date_fields(transaction_dict)
-                processed_transactions.append(processed_transaction)
+            print(f"Deriv user ID: {user_id}")
             
-            transactions = processed_transactions
-            print(f"Processed {len(transactions)} transactions with datetime conversion")
-
-            # Fetch recent notifications
-            cursor.execute("""
-                SELECT * FROM notifications 
-                WHERE user_id = ? 
-                ORDER BY created_at DESC 
-                LIMIT 5
-
-
-            """, (current_user_id,))
-            notifications = cursor.fetchall()
-            
-            # Process all notifications to ensure date fields are datetime objects
-            processed_notifications = []
-            for notification in notifications:
-                # Convert the Row object to a dictionary
-                notification_dict = dict(notification)
-                # Process all date fields
-                processed_notification = process_date_fields(notification_dict)
-                processed_notifications.append(processed_notification)
+            # Check if user exists in database
+            user_info = get_user_by_id(user_id)
+            if user_info:
+                print(f"User found in database: {user_info.get('id')}")
+                # Create session
+                session['user_id'] = user_info.get('id')  # Use the internal user ID
+                session['is_oauth_user'] = True
+                session['oauth_provider'] = 'deriv'
+                session.modified = True
+            else:
+                print("User not found in database, saving new user")
+                # Save new user
+                db_success, db_message, db_user_id = save_user_info(user_data_dict)
+                if not db_success:
+                    print(f"Database error: {db_message}")
+                    flash(f"Database error: {db_message}", "error")
+                    return redirect(url_for('login'))
                 
-            notifications = processed_notifications
-            print(f"Processed {len(notifications)} notifications with datetime conversion")
-
-            # Count unread notifications
-            cursor.execute("""
-                SELECT COUNT(*) as count
-                FROM notifications
-                WHERE user_id = ? AND is_read = 0
-
-
-            """, (current_user_id,))
-            unread_result = cursor.fetchone()
-            unread_count = unread_result['count'] if unread_result else 0
-
-        # Format accounts for JSON serialization (needed for JavaScript)
-        accounts_json = []
-        for account in accounts:
-            account_dict = dict(account)
-            account_dict['balance'] = float(account_dict['balance'])  # Ensure numeric
-            processed_account = process_date_fields(account_dict)
-            accounts_json.append(processed_account)
-
-        # Current timestamp - ensure it's a datetime object
-        now = datetime.now()
-
-        # Debug log the types
-        for t in transactions[:2]:
-            if 'created_at' in t:
-                print(f"Transaction created_at: {t['created_at']} (type: {type(t['created_at']).__name__})")
-                
-        for n in notifications[:2]:
-            if 'created_at' in n:
-                print(f"Notification created_at: {n['created_at']} (type: {type(n['created_at']).__name__})")
-
-        # If we have accounts, determine which one to display by default
-        selected_account_id = None
-        if accounts:
-            # Use the account with the highest balance as the default selected account
-            accounts_by_balance = sorted(accounts, key=lambda x: float(x['balance']), reverse=True)
-            selected_account_id = accounts_by_balance[0]['id']
-            print(f"Selected account ID for dashboard display: {selected_account_id}")
-
-        # Render template with all required data
-        return render_template(
-            'dashboard.html',
-            user=user,
-            accounts=accounts,
-            transactions=transactions,
-            notifications=notifications,
-            unread_count=unread_count,
-            now=now,
-            selected_account_id=selected_account_id,
-            accounts_json=json.dumps(accounts_json, default=str)  # Handle datetime serialization
-        )
-
-    except Exception as e:
-        # Log the error
-        print(f"Dashboard error: {str(e)}")
-        traceback.print_exc()
-        return redirect(url_for('login'))
+                print(f"User saved with ID: {db_user_id}")
+                # Create session
+                session['user_id'] = db_user_id
+                session['is_oauth_user'] = True
+                session['oauth_provider'] = 'deriv'
+                session.modified = True
+        else:
+            print(f"Failed to fetch user data: {user_data}")
+            flash("Authentication failed. Please try again.", "error")
+            return redirect(url_for('login'))
+    
+    current_user_id = session.get('user_id')
+    
+    # Check if this is an OAuth user
+    is_oauth_user = session.get('is_oauth_user', False)
+    oauth_provider = session.get('oauth_provider', None)
+    
+    # Update to handle both regular and OAuth users
+    with get_db() as db:
+        cursor = db.cursor()
+        
+        # Get user information
+        cursor.execute("SELECT * FROM users WHERE id = ?", (current_user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            # If user not found, log them out
+            print(f"User with ID {current_user_id} not found in database")
+            session.clear()
+            return redirect(url_for('login'))
+            
+        # Get user accounts
+        cursor.execute("SELECT * FROM accounts WHERE user_id = ?", (current_user_id,))
+        accounts = cursor.fetchall()
+        
+        # Get recent transactions
+        cursor.execute("""
+            SELECT t.* FROM transactions t
+            JOIN accounts a ON t.account_id = a.id
+            WHERE a.user_id = ?
+            ORDER BY t.created_at DESC LIMIT 5
+        """, (current_user_id,))
+        recent_transactions = cursor.fetchall()
+        
+        # Get unread notifications count
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM notifications
+            WHERE user_id = ? AND is_read = 0
+        """, (current_user_id,))
+        unread_count = cursor.fetchone()['count']
+        
+        # Get notifications for the dropdown
+        cursor.execute("""
+            SELECT * FROM notifications
+            WHERE user_id = ?
+            ORDER BY created_at DESC LIMIT 10
+        """, (current_user_id,))
+        notifications = cursor.fetchall()
+        
+    # Process accounts to ensure they have account_name
+    for account in accounts:
+        if not account.get('account_name'):
+            account['account_name'] = f"Deriv {account.get('loginid', '')}"
+    
+    # Create JSON representation of accounts for JavaScript
+    import json
+    accounts_json = json.dumps(accounts)
+        
+    # Prepare data for dashboard
+    dashboard_data = {
+        'user': user,
+        'accounts': accounts,
+        'accounts_json': accounts_json,  # Add JSON representation for JavaScript
+        'recent_transactions': recent_transactions,
+        'unread_count': unread_count,  # Make sure this is included
+        'notifications': notifications,  # Add this line to include the notifications
+        'is_oauth_user': is_oauth_user,
+        'oauth_provider': oauth_provider
+    }
+        
+    return render_template("dashboard.html", **dashboard_data)
 
 @app.route("/login")
 def login():
     # Check if there's a success message from password reset
     success_message = request.args.get('success')
     if success_message:
-        flash(success_message, "success")
-    return render_template("login.html")
+        flash("Password reset successful. Please log in with your new password.", "success")
+    
+    # Check if user is already logged in
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
+        
+    return render_template("login.html", deriv_oauth_url=deriv_oauth_url)
 
 @app.route("/login", methods=["POST"])
 def login_post():
     # Handle both form and JSON data
     if request.is_json:
         data = request.get_json()
-        email = data.get("email")
-        password = data.get("password")
-        remember = data.get("remember", False)
+        email = data.get('email', '')
+        password = data.get('password', '')
     else:
-        email = request.form.get("email")
-        password = request.form.get("password")
-        remember = request.form.get("remember", False)
-
+        email = request.form.get('email', '')
+        password = request.form.get('password', '')
+    
+    if not email or not password:
+        if request.is_json:
+            return jsonify({"success": False, "message": "Email and password are required"}), 400
+        else:
+            flash("Email and password are required", "error")
+            return redirect(url_for('login'))
+    
+    # Connect to the database and check credentials
     with get_db() as db:
         cursor = db.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
-
-        if user and check_password_hash(user["password_hash"], password):
-            # Check if user is blocked
-            # Convert Row to dict to safely access keys
-            user_dict = dict(user)
-            if user_dict.get("is_active") == 0:
-                # User is blocked
-                blocked_reason = user_dict.get("blocked_reason", "Your account has been blocked")
-                blocked_at = user_dict.get("blocked_at")
-                
-                # Construct a more informative blocked message
-                if blocked_reason:
-                    # Make more robust and detailed message
-                    blocked_message = f"Access Denied: {blocked_reason}"
-                    if blocked_at:
-                        blocked_message += f" (Blocked on: {blocked_at})"
-                else:
-                    blocked_message = "Your account has been blocked for violating our policies. Please contact support."
-                
-                # Log blocked user attempt
-                log_security_event(
-                    "blocked_login", 
-                    f"Blocked user attempted to login: {email}", 
-                    "medium", 
-                    user["id"]
-                )
-                
-                if request.is_json:
-                    return jsonify({
-                        "success": False,
-                        "message": blocked_message
-                    }), 403
-                else:
-                    flash(blocked_message, "error")
-                    return redirect(url_for("login"))
-            
-            # User is active, proceed with login
-            # Log successful login
-            log_user_activity(user["id"], "login", f"User {user['email']} logged in successfully")
-            
-            # Set session
-            session["user_id"] = user["id"]
-            session["email"] = user["email"]
-            session["first_name"] = user["first_name"]
-            session["last_name"] = user["last_name"]
-            
-            if remember:
-                session.permanent = True
-            
+        
+        if not user:
             if request.is_json:
-                return jsonify({
-                    "success": True,
-                    "message": "Login successful!",
-                    "user": {
-                        "id": user["id"],
-                        "email": user["email"],
-                        "first_name": user["first_name"],
-                        "last_name": user["last_name"]
-                    }
-                })
-            else:
-                flash("Login successful!", "success")
-                return redirect(url_for("dashboard"))
-        else:
-            # Log failed login attempt
-            if user:
-                log_security_event("failed_login", f"Failed login attempt for user {email}", "medium", user["id"])
-            else:
-                log_security_event("failed_login", f"Failed login attempt for non-existent user {email}", "low")
-            
-            if request.is_json:
-                return jsonify({
-                    "success": False,
-                    "message": "Invalid email or password"
-                }), 401
+                return jsonify({"success": False, "message": "Invalid email or password"}), 401
             else:
                 flash("Invalid email or password", "error")
-                return redirect(url_for("login"))
+                return redirect(url_for('login'))
+    
+        # Check if user is an OAuth user
+        if user.get('is_oauth_user') == 1:
+            oauth_provider = user.get('oauth_provider', 'unknown')
+            if request.is_json:
+                return jsonify({"success": False, "message": f"Please log in using your {oauth_provider} account"}), 401
+            else:
+                flash(f"Please log in using your {oauth_provider} account", "error")
+                return redirect(url_for('login'))
+    
+        # Verify password
+        password_hash = user.get('password_hash')
+        if not password_hash or not check_password_hash(password_hash, password):
+            if request.is_json:
+                return jsonify({"success": False, "message": "Invalid email or password"}), 401
+            else:
+                flash("Invalid email or password", "error")
+                return redirect(url_for('login'))
+    
+        # Check if user is active
+        if user.get('is_active') == 0:
+            blocked_reason = user.get('blocked_reason', 'Your account has been blocked')
+            if request.is_json:
+                return jsonify({"success": False, "message": blocked_reason}), 403
+            else:
+                flash(blocked_reason, "error")
+                return redirect(url_for('login'))
+    
+        # Login successful
+        session['user_id'] = user['id']
+        session['is_oauth_user'] = False
+        session.modified = True
+    
+        log_user_activity(user['id'], 'login', f"User logged in via form")
+    
+        if request.is_json:
+            return jsonify({"success": True, "redirect": url_for('dashboard')}), 200
+        else:
+            return redirect(url_for('dashboard'))
 
 @app.route("/signup")
 def signup():
@@ -921,6 +941,60 @@ def settings():
     user_id = get_current_user_id()
     with get_db() as db:
         cursor = db.cursor()
+        
+        # First, check if the preferred_payment_method column exists
+        cursor.execute("PRAGMA table_info(users)")
+        columns = cursor.fetchall()
+        # Print column structure for debugging
+        if columns:
+            print(f"First column structure: {columns[0]}")
+        
+        # The PRAGMA table_info returns tuples with column name at index 1
+        # We need to access the name from each column result
+        try:
+            column_names = [column[1] for column in columns]
+            has_preferred_payment = 'preferred_payment_method' in column_names
+        except (IndexError, KeyError) as e:
+            # If the expected structure isn't found, use a safer approach
+            column_names = []
+            for column in columns:
+                if isinstance(column, dict) and 'name' in column:
+                    # Dictionary with 'name' key
+                    column_names.append(column['name'])
+                elif isinstance(column, tuple) and len(column) > 1:
+                    # Tuple with name at index 1
+                    column_names.append(column[1])
+                elif hasattr(column, 'name'):
+                    # Row object with name attribute
+                    column_names.append(column.name)
+            
+            has_preferred_payment = 'preferred_payment_method' in column_names
+            print(f"Using alternative column name extraction due to: {str(e)}")
+        
+        print(f"User table columns: {column_names}")
+        print(f"Has preferred_payment_method column: {has_preferred_payment}")
+
+        # Check if the accounts table has is_default column
+        cursor.execute("PRAGMA table_info(accounts)")
+        account_columns = cursor.fetchall()
+        
+        # Apply the same safe extraction logic for account columns
+        try:
+            account_column_names = [column[1] for column in account_columns]
+        except (IndexError, KeyError) as e:
+            account_column_names = []
+            for column in account_columns:
+                if isinstance(column, dict) and 'name' in column:
+                    account_column_names.append(column['name'])
+                elif isinstance(column, tuple) and len(column) > 1:
+                    account_column_names.append(column[1])
+                elif hasattr(column, 'name'):
+                    account_column_names.append(column.name)
+            print(f"Using alternative column name extraction for accounts table due to: {str(e)}")
+        
+        has_is_default = 'is_default' in account_column_names
+        print(f"Accounts table columns: {account_column_names}")
+        print(f"Has is_default column: {has_is_default}")
 
         if request.method == "POST":
             try:
@@ -938,11 +1012,12 @@ def settings():
                 updates = []
                 params = []
                 
-                if payment_method:
+                # Only include preferred_payment_method if it exists
+                if payment_method and has_preferred_payment:
                     updates.append("preferred_payment_method = ?")
                     params.append(payment_method)
                 
-                if mpesa_phone:
+                if mpesa_phone and 'phone_number' in column_names:
                     updates.append("phone_number = ?")
                     params.append(mpesa_phone)
                 
@@ -953,8 +1028,8 @@ def settings():
                     cursor.execute(query, params)
                     app.logger.info(f"Updated payment method for user {user_id}: {payment_method}")
                 
-                # Update default account if specified
-                if deriv_account:
+                # Update default account if specified and is_default column exists
+                if deriv_account and has_is_default:
                     # Clear previous default settings
                     cursor.execute("UPDATE accounts SET is_default = 0 WHERE user_id = ?", (user_id,))
                     # Set new default
@@ -970,54 +1045,138 @@ def settings():
             except Exception as e:
                 db.rollback()
                 app.logger.error(f"Error updating payment method for user {user_id}: {str(e)}")
-                return jsonify({"message": "An error occurred. Please try again", "success": False}), 500
+                return jsonify({"message": f"An error occurred: {str(e)}", "success": False}), 500
 
-        cursor.execute("""
-            SELECT *, 
-                   COALESCE(preferred_payment_method, 'mpesa') AS preferred_payment_method
-            FROM users 
-            WHERE id = ?
-        """, (user_id,))
+        # Fetch user data with or without the preferred_payment_method
+        if has_preferred_payment:
+            cursor.execute("""
+                SELECT *, 
+                       COALESCE(preferred_payment_method, 'mpesa') AS preferred_payment_method
+                FROM users 
+                WHERE id = ?
+            """, (user_id,))
+        else:
+            # If the column doesn't exist, use a default value
+            cursor.execute("""
+                SELECT *, 
+                       'mpesa' AS preferred_payment_method
+                FROM users 
+                WHERE id = ?
+            """, (user_id,))
+            
         user = cursor.fetchone()
 
         # Fetch user accounts for the Deriv account selector
-        cursor.execute("""
-            SELECT a.*, 
-            COALESCE((SELECT SUM(amount) FROM transactions 
-            WHERE account_id = a.id AND transaction_type = 'deposit' AND status = 'completed'), 0) -
-            COALESCE((SELECT SUM(amount) FROM transactions 
-            WHERE account_id = a.id AND transaction_type = 'withdrawal' AND status = 'completed'), 0) as balance
-            FROM accounts a
-            WHERE a.user_id = ?
-        """, (user_id,))
+        if has_is_default:
+            # If is_default column exists, include it in the query
+            cursor.execute("""
+                SELECT a.*, 
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'deposit' AND status = 'completed'), 0) -
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'withdrawal' AND status = 'completed'), 0) as balance
+                FROM accounts a
+                WHERE a.user_id = ?
+            """, (user_id,))
+        else:
+            # If is_default doesn't exist, use a simpler query
+            cursor.execute("""
+                SELECT a.*, 
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'deposit' AND status = 'completed'), 0) -
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'withdrawal' AND status = 'completed'), 0) as balance,
+                CASE WHEN a.id = (SELECT MIN(id) FROM accounts WHERE user_id = ?) THEN 1 ELSE 0 END as is_default
+                FROM accounts a
+                WHERE a.user_id = ?
+            """, (user_id, user_id))
+            
         accounts = cursor.fetchall()
 
         # If no accounts exist, create a default one
         if not accounts:
-            account_number = generate_account_number()
-            cursor.execute("""
-                INSERT INTO accounts (user_id, account_number, account_name, account_type, currency, is_active, is_default)
-                VALUES (?, ?, ?, ?, ?, ?, 1)
-            """, (user_id, account_number, "Default Account", "standard", "USD", 1))
+            # Check which columns exist in accounts table
+            cursor.execute("PRAGMA table_info(accounts)")
+            account_columns = cursor.fetchall()
+            
+            # Apply the same safe column extraction logic
+            try:
+                account_column_names = [column[1] for column in account_columns]
+            except (IndexError, KeyError) as e:
+                account_column_names = []
+                for column in account_columns:
+                    if isinstance(column, dict) and 'name' in column:
+                        account_column_names.append(column['name'])
+                    elif isinstance(column, tuple) and len(column) > 1:
+                        account_column_names.append(column[1])
+                    elif hasattr(column, 'name'):
+                        account_column_names.append(column.name)
+                print(f"Using alternative column name extraction for accounts table due to: {str(e)}")
+            
+            has_account_number = 'account_number' in account_column_names
+            has_account_name = 'account_name' in account_column_names
+            has_account_type = 'account_type' in account_column_names
+            
+            # Build dynamic INSERT statement based on available columns
+            columns = ['user_id']
+            values = [user_id]
+            
+            if has_account_number:
+                columns.append('account_number')
+                values.append(generate_account_number())
+            
+            if has_account_name:
+                columns.append('account_name')
+                values.append("Default Account")
+                
+            if has_account_type:
+                columns.append('account_type')
+                values.append("standard")
+            
+            columns.extend(['currency', 'is_active'])
+            values.extend(['USD', 1])
+            
+            # Only include is_default if it exists
+            if has_is_default:
+                columns.append('is_default')
+                values.append(1)
+            
+            # Build and execute the dynamic query
+            query = f"INSERT INTO accounts ({', '.join(columns)}) VALUES ({', '.join(['?'] * len(values))})"
+            cursor.execute(query, values)
             db.commit()
 
             # Fetch the newly created account
-            cursor.execute("""
-                SELECT a.*, 0 as balance
-                FROM accounts a
-                WHERE a.id = last_insert_rowid()
-            """)
+            if has_is_default:
+                cursor.execute("""
+                    SELECT a.*, 0 as balance
+                    FROM accounts a
+                    WHERE a.id = last_insert_rowid()
+                """)
+            else:
+                cursor.execute("""
+                    SELECT a.*, 0 as balance, 1 as is_default
+                    FROM accounts a
+                    WHERE a.id = last_insert_rowid()
+                """)
+                
             accounts = cursor.fetchall()
             
         # Check if any account is set as default
-        any_default_account = any(account['is_default'] == 1 for account in accounts)
-        
-        # If no account is set as default, set the first one
-        if not any_default_account and accounts:
-            cursor.execute("UPDATE accounts SET is_default = 1 WHERE id = ?", (accounts[0]['id'],))
-            db.commit()
-            accounts[0]['is_default'] = 1
+        if has_is_default:
+            any_default_account = any(account.get('is_default', 0) == 1 for account in accounts)
+            
+            # If no account is set as default, set the first one
+            if not any_default_account and accounts:
+                cursor.execute("UPDATE accounts SET is_default = 1 WHERE id = ?", (accounts[0]['id'],))
+                db.commit()
+                accounts[0]['is_default'] = 1
+                any_default_account = True
+        else:
+            # If is_default column doesn't exist, just consider the first account as default
             any_default_account = True
+            if accounts:
+                accounts[0]['is_default'] = 1
 
     return render_template("settings.html", user=user, accounts=accounts, any_default_account=any_default_account)
 
@@ -1195,7 +1354,7 @@ def transactions():
             user = cursor.fetchone()
 
             cursor.execute("""
-                SELECT t.*, a.account_number 
+                SELECT t.*, a.loginid as account_number 
                 FROM transactions t
                 LEFT JOIN accounts a ON t.account_id = a.id
                 WHERE a.user_id = ?
@@ -1212,40 +1371,104 @@ def transactions():
                 transaction_dict = dict(transaction)
                 # Process all date fields
                 processed_transaction = process_date_fields(transaction_dict)
-                
-                # Process metadata field if it exists
-                if processed_transaction.get('metadata'):
-                    try:
-                        # Ensure metadata is properly parsed to JSON
-                        if isinstance(processed_transaction['metadata'], str):
-                            processed_transaction['metadata'] = json.loads(processed_transaction['metadata'])
-                    except Exception as e:
-                        print(f"Error parsing transaction metadata: {str(e)}")
-                        print(f"Raw metadata: {processed_transaction.get('metadata')}")
-                        # Keep as is if there's an error
-                
                 processed_transactions.append(processed_transaction)
             
             transactions = processed_transactions
-            print(f"Processed {len(transactions)} transactions for transactions page")
+            print(f"Processed {len(transactions)} transactions with datetime conversion")
+
+            # Fetch recent notifications
+            cursor.execute("""
+                SELECT * FROM notifications 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC 
+                LIMIT 5
+
+
+            """, (user_id,))
+            notifications = cursor.fetchall()
             
-            # Debug log the types of first few transactions
-            for t in transactions[:2]:
-                if 'created_at' in t:
-                    print(f"Transaction created_at: {t['created_at']} (type: {type(t['created_at']).__name__})")
-        
-        # Current timestamp for the template
+            # Process all notifications to ensure date fields are datetime objects
+            processed_notifications = []
+            for notification in notifications:
+                # Convert the Row object to a dictionary
+                notification_dict = dict(notification)
+                # Process all date fields
+                processed_notification = process_date_fields(notification_dict)
+                processed_notifications.append(processed_notification)
+                
+            notifications = processed_notifications
+            print(f"Processed {len(notifications)} notifications with datetime conversion")
+
+            # Count unread notifications
+            cursor.execute("""
+                SELECT COUNT(*) as count
+                FROM notifications
+                WHERE user_id = ? AND is_read = 0
+
+
+            """, (user_id,))
+            unread_result = cursor.fetchone()
+            unread_count = unread_result['count'] if unread_result else 0
+            
+            # Fetch user accounts
+            cursor.execute("""
+                SELECT a.*, 
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'deposit' AND status = 'completed'), 0) -
+                COALESCE((SELECT SUM(amount) FROM transactions 
+                WHERE account_id = a.id AND transaction_type = 'withdrawal' AND status = 'completed'), 0) as balance
+                FROM accounts a
+                WHERE a.user_id = ?
+            """, (user_id,))
+            accounts = cursor.fetchall()
+
+        # Format accounts for JSON serialization (needed for JavaScript)
+        accounts_json = []
+        for account in accounts:
+            account_dict = dict(account)
+            account_dict['balance'] = float(account_dict['balance'])  # Ensure numeric
+            processed_account = process_date_fields(account_dict)
+            accounts_json.append(processed_account)
+
+        # Current timestamp - ensure it's a datetime object
         now = datetime.now()
-        
-        return render_template("transactions.html", user=user, transactions=transactions, now=now)
-        
+
+        # Debug log the types
+        for t in transactions[:2]:
+            if 'created_at' in t:
+                print(f"Transaction created_at: {t['created_at']} (type: {type(t['created_at']).__name__})")
+                
+        for n in notifications[:2]:
+            if 'created_at' in n:
+                print(f"Notification created_at: {n['created_at']} (type: {type(n['created_at']).__name__})")
+
+        # If we have accounts, determine which one to display by default
+        selected_account_id = None
+        if accounts:
+            # Use the account with the highest balance as the default selected account
+            accounts_by_balance = sorted(accounts, key=lambda x: float(x['balance']), reverse=True)
+            selected_account_id = accounts_by_balance[0]['id']
+            print(f"Selected account ID for dashboard display: {selected_account_id}")
+
+        # Render template with all required data
+        return render_template(
+            'dashboard.html',
+            user=user,
+            accounts=accounts,
+            transactions=transactions,
+            notifications=notifications,
+            unread_count=unread_count,
+            now=now,
+            selected_account_id=selected_account_id,
+            accounts_json=json.dumps(accounts_json, default=str)  # Handle datetime serialization
+        )
+
     except Exception as e:
         # Log the error
-        print(f"Transactions page error: {str(e)}")
+        print(f"Dashboard error: {str(e)}")
         traceback.print_exc()
         return redirect(url_for('login'))
 
-# Notification endpoints
 @app.route("/notifications")
 @login_required
 def view_all_notifications():
@@ -3206,7 +3429,7 @@ def admin_user_transactions(user_id):
         # Get transactions
         placeholders = ', '.join(['?' for _ in account_ids])
         cursor.execute(f"""
-            SELECT t.*, a.account_number 
+            SELECT t.*, a.loginid as account_number 
             FROM transactions t
             JOIN accounts a ON t.account_id = a.id
             WHERE t.account_id IN ({placeholders})
@@ -3606,7 +3829,7 @@ def admin_transaction_detail(reference):
 
         # Get transaction details
         cursor.execute("""
-            SELECT t.*, a.account_number, a.user_id, u.first_name, u.last_name, u.email
+            SELECT t.*, a.loginid as account_number, a.user_id, u.first_name, u.last_name, u.email
             FROM transactions t
             JOIN accounts a ON t.account_id = a.id
             JOIN users u ON a.user_id = u.id
@@ -3697,10 +3920,10 @@ def admin_transactions():
                 user_info = cursor.fetchone()
                 
                 # Get account number
-                cursor.execute("SELECT account_number FROM accounts WHERE id = ?", (tx['account_id'],))
+                cursor.execute("SELECT loginid FROM accounts WHERE id = ?", (tx['account_id'],))
                 account_result = cursor.fetchone()
                 if account_result:
-                    account_number = account_result['account_number']
+                    account_number = account_result['loginid']
             
             # Get sender and recipient if they exist
             # Use safer attribute access for sqlite3.Row objects
@@ -3894,32 +4117,39 @@ except Exception as e:
     print(f"Error adding debug routes: {e}")
 
 @app.before_request
-def set_test_user_for_development():
-    """Set a test user for development purposes"""
+def set_test_user():
     # Skip for static files
     if request.path.startswith('/static'):
         return
 
+    # Only do this in development mode with specific debug flag
+    if app.config.get('FLASK_ENV') != 'development' or not app.config.get('DEBUG_TEST_USER', False):
+        return
+        
     # If no user is logged in, set a test user for development
     if 'user_id' not in session:
-        print("Setting test user ID to 4 for development testing")
-        session['user_id'] = 4
-        session['email'] = 'testuser@example.com'
-        session['first_name'] = 'Test'
-        session['last_name'] = 'User'
-        
-        # Get actual user data if possible
         try:
+            # First check if user with ID 4 exists
             with get_db() as db:
                 cursor = db.cursor()
                 cursor.execute("SELECT * FROM users WHERE id = ?", (4,))
                 user = cursor.fetchone()
+                
                 if user:
-                    session['email'] = user['email']
-                    session['first_name'] = user['first_name']
-                    session['last_name'] = user['last_name']
+                    # Only print when we actually set the test user
+                    print("[DEV MODE] Setting test user ID to 4 for development testing")
+                    session['user_id'] = 4
+                    session['email'] = user.get('email', 'testuser@example.com')
+                    session['first_name'] = user.get('first_name', 'Test')
+                    session['last_name'] = user.get('last_name', 'User')
+                else:
+                    # Silently skip setting test user if it doesn't exist
+                    if app.debug:
+                        print("[DEV MODE] Test user ID 4 not found - automatic test login disabled")
         except Exception as e:
-            print(f"Error fetching test user data: {e}")
+            if app.debug:
+                print(f"[DEV MODE] Error checking for test user: {e}")
+            # Don't set session if there's an error
 
 @app.route("/api/transaction-data")
 def api_transaction_data():
@@ -4151,7 +4381,7 @@ def debug_user_transactions(user_id):
             cursor.execute(f'''
                 SELECT 
                     t.*,
-                    a.account_number
+                    a.loginid as account_number
                 FROM transactions t
                 JOIN accounts a ON t.account_id = a.id
                 WHERE t.account_id IN ({placeholders})
@@ -4360,7 +4590,7 @@ def admin_generate_user_statement(user_id):
         # Get transactions for all user accounts, sorted by date descending
         account_ids_str = ','.join(['?' for _ in account_ids])
         cursor.execute(f"""
-            SELECT t.*, a.account_number, a.account_name, a.account_type 
+            SELECT t.*, a.loginid as account_number, a.account_name, a.account_type 
             FROM transactions t
             JOIN accounts a ON t.account_id = a.id
             WHERE t.account_id IN ({account_ids_str})
@@ -4597,7 +4827,7 @@ def transaction_detail(reference):
 
             # Get transaction details
             cursor.execute("""
-                SELECT t.*, a.account_number, a.account_name
+                SELECT t.*, a.loginid as account_number, a.account_name
                 FROM transactions t
                 JOIN accounts a ON t.account_id = a.id
                 WHERE t.reference = ? AND a.user_id = ?

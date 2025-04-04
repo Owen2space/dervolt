@@ -1,3 +1,13 @@
 homepage
-
-<a href="{{ url_for('deriv_oauth') }}">Login</a>
+<br>
+{% if session.get('user_id') %}
+    <p>Hello, {{ session.get('username') }}</p>
+    <a href="{{ url_for('dashboard') }}">Visit Dashboard</a>
+    <br><br>
+    <a href="{{ url_for('logout') }}">Logout</a>
+{% else %}
+<br>
+    <a href="{{ url_for('deriv_oauth') }}">Deriv Login</a>
+    <br><br>
+    <a href="{{ url_for('login') }}">Local Login</a>
+{% endif %}
