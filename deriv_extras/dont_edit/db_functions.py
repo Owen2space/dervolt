@@ -1,7 +1,7 @@
 import sqlite3
 import json
 from datetime import datetime
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple, Optional, List
 import uuid
 import os
 
@@ -39,14 +39,14 @@ def get_db_connection():
     conn.row_factory = dict_factory
     return conn
 
-def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool, str]:
+def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool, str, Optional[str]]:
     try:
         # Extract data from the user_data JSON
         authorize_data = user_data.get('authorize', {})
         user_id = authorize_data.get('user_id')
         
         if not user_id:
-            return False, "User ID not found in the data"
+            return False, "User ID not found in the data", None
         
         # print("authorize_data", json.dumps(authorize_data))
         
@@ -57,7 +57,7 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
 
         account_list = authorize_data.get('account_list', [])
         if not account_list:
-            return False, "No accounts found for user"
+            return False, "No accounts found for user", None
         
         # Connect to database
         conn = get_db_connection()
@@ -79,9 +79,7 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
             # Default values for new fields
             password = None
             is_active = "0"  # Set as active by default
-
-            # print(is_virtual)
-
+            
             if str(is_virtual) == "1":
                 continue
 
@@ -103,7 +101,7 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
                 cursor.execute("""
                     UPDATE users 
                     SET session_token = ?, email = ?, phone = ?, fullname = ?, balance = ?, country = ?, country_code = ?, 
-                        currency = ?, is_vitual = ?, account_updated = ?
+                        currency = ?, is_virtual = ?, account_updated = ?
                     WHERE user_id = ? AND loginid_accountid = ?
                 """, (session_token, email, phone_number, fullname, balance, country, country_code, currency, 
                      is_virtual, current_time, user_id, loginid))
@@ -114,7 +112,7 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
                 cursor.execute("""
                     INSERT INTO users 
                     (uid, session_token, user_id, loginid_accountid, email, phone, fullname, balance, country, country_code,
-                     currency, is_vitual, password, is_active, account_created, account_updated)
+                     currency, is_virtual, password, is_active, account_created, account_updated)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (uid, session_token, user_id, loginid, email, phone_number, fullname, balance, country, country_code,
                      currency, is_virtual, password, is_active, current_time, current_time))
@@ -127,6 +125,75 @@ def save_user_info(user_data: Dict[str, Any], session_token: str) -> Tuple[bool,
         return False, f"Database error: {str(e)}", None
     except Exception as e:
         return False, f"Error saving user data: {str(e)}", None
+    
+def save_mt5_info(user_id: str, mt5_accounts_info):
+    """
+    Save MT5 account information for a user to the mt5_accounts table.
+    Only saves real accounts (filters out demo accounts).
+    
+    Args:
+        user_id: The user's account ID
+        mt5_accounts_info: List of MT5 account information dictionaries
+        
+    Returns:
+        A tuple containing (success: bool, message: str)
+    """
+    try:
+        # Filter out demo accounts, keep only real accounts
+        real_mt5_accounts = [account for account in mt5_accounts_info if account.get('type', '').lower() == 'real']
+        
+        if not real_mt5_accounts:
+            return True, "No real MT5 accounts to save"
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # For each MT5 account, insert or update the record in the mt5_accounts table
+        for mt5_account in real_mt5_accounts:
+            mt5_login = mt5_account.get('login', '')
+            mt5_balance = str(mt5_account.get('balance', '0'))
+            mt5_leverage = str(mt5_account.get('leverage', '0'))
+            mt5_currency = mt5_account.get('currency', 'USD')
+            mt5_group = mt5_account.get('group', '')
+            mt5_server = mt5_account.get('server', '')
+            
+            # Check if this MT5 login already exists for ANY user 
+            # (ensures mt5_login is treated as unique)
+            cursor.execute("""
+                SELECT * FROM mt5_accounts 
+                WHERE mt5_login = ?
+            """, (mt5_login,))
+            
+            existing_account = cursor.fetchone()
+            
+            if existing_account:
+                # Update existing MT5 account record
+                cursor.execute("""
+                    UPDATE mt5_accounts
+                    SET user_id = ?, mt5_balance = ?, mt5_leverage = ?, mt5_currency = ?,
+                        mt5_group = ?, mt5_server = ?, account_updated = ?
+                    WHERE mt5_login = ?
+                """, (user_id, mt5_balance, mt5_leverage, mt5_currency, mt5_group, 
+                      mt5_server, current_time, mt5_login))
+            else:
+                # Insert new MT5 account record
+                cursor.execute("""
+                    INSERT INTO mt5_accounts
+                    (user_id, mt5_login, mt5_balance, mt5_leverage, mt5_currency,
+                     mt5_group, mt5_server, account_created, account_updated)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (user_id, mt5_login, mt5_balance, mt5_leverage, mt5_currency,
+                      mt5_group, mt5_server, current_time, current_time))
+                
+        conn.commit()
+        conn.close()
+        return True, "MT5 account information saved successfully"
+        
+    except sqlite3.Error as e:
+        return False, f"Database error: {str(e)}"
+    except Exception as e:
+        return False, f"Error saving MT5 data: {str(e)}"
 
 def get_user_by_id(user_id: str) -> Optional[Dict]:
     try:

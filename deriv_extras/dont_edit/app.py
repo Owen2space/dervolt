@@ -4,8 +4,8 @@ import json
 
 from config import deriv_oauth_url
 
-from deriv_functions import fetch_deriv_user_info, extract_tokens_from_url
-from db_functions import save_user_info, get_user_by_id, get_user_by_email, set_user_password
+from deriv_functions import fetch_deriv_user_info, extract_tokens_from_url, get_mt5_data
+from db_functions import save_user_info, get_user_by_id, get_user_by_email, set_user_password, save_mt5_info
 from config import app_id
 
 app = Flask(__name__)
@@ -92,6 +92,48 @@ def oauth():
             "success": success,
             "error": user_data
         })
+    
+@app.route('/get_mt5_info', methods= ['GET'])
+def get_mt5_info():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({
+            "success": False,
+            "error": "User not authenticated"
+        })
+        
+    # Get user information from the database to retrieve the token
+    user_info = get_user_by_id(user_id)
+    if not user_info:
+        return jsonify({
+            "success": False,
+            "error": "User not found"
+        })
+        
+    # Get the Deriv session token
+    deriv_token = user_info[0].get("session_token")
+    if not deriv_token:
+        return jsonify({
+            "success": False,
+            "error": "No Deriv token available for this user"
+        })
+    
+    # Use the get_mt5_data function to fetch MT5 account data
+    mt5_data = get_mt5_data(deriv_token)
+
+    mt5_accounts_info = mt5_data.get("mt5_accounts")
+
+    #save mt5 accounts info to db
+    status, message = save_mt5_info(user_id, mt5_accounts_info)
+
+    if not status:
+        return jsonify({
+            "success": False,
+            "error": message
+        })
+
+    # Return the data as JSON response
+    return jsonify(mt5_accounts_info)
     
 @app.route('/login', methods=['GET'])
 def login():

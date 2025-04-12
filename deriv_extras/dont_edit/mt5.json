@@ -1,0 +1,78 @@
+{
+    "account": {
+      "balance": 10002.7,
+      "email": "owenmuchungi@gmail.com",
+      "id": "VRTC7061113",
+      "is_virtual": 1,
+      "name": " Owen Muchungi",
+      "type": "VIRTUAL"
+    },
+    "available_accounts": [
+      {
+        "currency": "USD",
+        "id": "CR5056855",
+        "is_virtual": 0,
+        "type": "REAL"
+      },
+      {
+        "currency": "USD",
+        "id": "VRTC7061113",
+        "is_virtual": 1,
+        "type": "VIRTUAL"
+      }
+    ],
+    "mt5_accounts": [
+      {
+        "balance": 10000,
+        "currency": "USD",
+        "group": "demo\\p01_ts04\\standard\\dsvg_default_usd",
+        "leverage": 1000,
+        "login": "MTD40578880",
+        "name": "Owen Demo Standard",
+        "server": "p01_ts04",
+        "type": "demo"
+      },
+      {
+        "balance": 10000,
+        "currency": "USD",
+        "group": "demo\\p01_ts04\\financial\\dsvg_default_usd",
+        "leverage": 1000,
+        "login": "MTD40578881",
+        "name": "Owen Demo Financial",
+        "server": "p01_ts04",
+        "type": "demo"
+      },
+      {
+        "balance": 0,
+        "currency": "USD",
+        "group": "real\\p02_ts02\\synthetic\\svg_std_usd\\03",
+        "leverage": 500,
+        "login": "MTR101541002",
+        "name": "Owen Muchungi",
+        "server": "p02_ts02",
+        "type": "real"
+      },
+      {
+        "balance": 0,
+        "currency": "USD",
+        "group": "real\\p02_ts01\\all\\svg_std-sf_usd",
+        "leverage": 1000,
+        "login": "MTR80450287",
+        "name": "Owen Muchungi",
+        "server": "p02_ts01",
+        "type": "real"
+      },
+      {
+        "balance": 0,
+        "currency": "USD",
+        "group": "real\\p01_ts01\\financial\\svg_std-hr_usd",
+        "leverage": 1000,
+        "login": "MTR9838995",
+        "name": "Owen Muchungi",
+        "server": "p01_ts01",
+        "type": "real"
+      }
+    ],
+    "success": true
+  }
+  
